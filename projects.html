@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Tracker</title>
+<style>
+  * { box-sizing: border-box; font-family: "Segoe UI", Arial, sans-serif; }
+  body { margin: 0; background: #f0f2f5; color: #2c3e50; padding: 20px; }
+  h1 { text-align: center; margin-bottom: 15px; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; align-items: center; }
+  .toolbar input, .toolbar select { padding: 8px 12px; border: 1px solid #ccc; border-radius: 8px; }
+  button { cursor: pointer; border: none; border-radius: 8px; padding: 9px 16px; font-weight: 600; }
+  a.nav-btn { background:#2c3e50; color:#fff; padding:9px 16px; border-radius:8px; font-weight:600; text-decoration:none; }
+  .btn-add { background: #27ae60; color: #fff; }
+  .btn-export { background: #2980b9; color: #fff; }
+  .btn-tl { background: #8e44ad; color: #fff; padding: 4px 8px; font-size:11px; margin-top:6px; }
+  .count { color:#7f8c8d; font-size: 14px; margin-left:auto; }
+  table { width: 100%; border-collapse: collapse; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.08); border-radius: 10px; overflow:hidden; }
+  th { background: #1a5c3a; color: #fff; padding: 10px 6px; font-size: 12px; text-align: left; }
+  td { border: 1px solid #e1e5ea; padding: 8px 6px; font-size: 13px; vertical-align: top; }
+  td[contenteditable]:focus, div[contenteditable]:focus { outline: 2px solid #3498db; background: #f0f8ff; }
+  select { padding: 4px; border-radius: 6px; cursor: pointer; font-size:12px; }
+  input[type="date"] { padding: 4px; border: 1px solid #ccc; border-radius: 6px; font-size:12px; }
+  tr:hover { background:#f8f9fa; }
+  tr.ctx-active { background:#fff3cd !important; }
+  .mini-prog { width:100%; height:16px; background:#eee; border-radius:8px; overflow:hidden; position:relative; }
+  .mini-prog-fill { height:100%; border-radius:8px; }
+  .mini-prog-text { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; }
+  .img-area { margin-top:6px; }
+  .img-area img { width:180px; max-height:140px; object-fit:cover; border-radius:6px; cursor:zoom-in; border:1px solid #ddd; margin:3px; display:block; }
+  .img-area .iw { display:inline-block; position:relative; }
+  .img-area .ir { position:absolute; top:2px; right:2px; background:rgba(231,76,60,.9); color:#fff; border:none; border-radius:50%; width:18px; height:18px; cursor:pointer; font-size:11px; display:none; }
+  .img-area .iw:hover .ir { display:block; }
+  /* Context Menu */
+  #ctxMenu { display:none; position:fixed; z-index:1000; background:#fff; border:1px solid #ddd; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,.15); padding:6px 0; min-width:160px; }
+  #ctxMenu .ctx-item { padding:8px 16px; font-size:13px; cursor:pointer; display:flex; align-items:center; gap:8px; }
+  #ctxMenu .ctx-item:hover { background:#f0f0f0; }
+  #ctxMenu .ctx-del { color:#e74c3c; }
+  /* Timeline Panel */
+  .tl-panel { display:none; background:#f9f9f9; border:1px solid #ddd; padding:12px; margin-top:6px; border-radius:8px; }
+  .tl-panel.open { display:block; }
+  .tl-add { display:flex; gap:4px; margin-bottom:10px; flex-wrap:wrap; }
+  .tl-add input, .tl-add textarea { padding:5px; border:1px solid #ccc; border-radius:6px; font-size:11px; }
+  .tl-add textarea { flex:1; min-width:100px; resize:none; height:28px; }
+  .timeline { position:relative; padding-left:18px; }
+  .timeline::before { content:""; position:absolute; left:6px; top:0; bottom:0; width:3px; background:linear-gradient(#3498db,#2ecc71); border-radius:2px; }
+  .tl-item { position:relative; margin-bottom:10px; padding-left:14px; padding-right:24px; cursor:pointer; border-radius:6px; padding-top:4px; padding-bottom:4px; transition:background .2s; }
+  .tl-item:hover { background:rgba(0,0,0,.03); }
+  .tl-item::before { content:""; position:absolute; left:-14px; top:8px; width:14px; height:14px; border-radius:50%; border:2px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.2); }
+  .tl-item.nd-done::before { background:#27ae60; }
+  .tl-item.nd-prog::before { background:#f39c12; }
+  .tl-item.nd-wait::before { background:#bbb; }
+  .tl-title { font-weight:700; font-size:12px; }
+  .tl-desc { font-size:11px; color:#555; }
+  .tl-date { font-size:10px; color:#888; }
+   .tl-del-btn { position:absolute; right:4px; top:4px; background:none; color:#ccc; border:none; border-radius:0; width:auto; height:auto; font-size:11px; cursor:pointer; display:none; padding:2px 4px; opacity:0.5; transition:opacity .2s, color .2s; }
+  .tl-del-btn:hover { opacity:1; color:#e74c3c; }
+  .tl-item:hover .tl-del-btn { display:block; }
+  .tl-item:hover .tl-del-btn { display:flex; }
+  .tl-legend { display:flex; gap:8px; font-size:10px; margin-bottom:8px; }
+  .tl-legend .dot { width:10px; height:10px; border-radius:50%; display:inline-block; vertical-align:middle; margin-right:3px; }
+  /* Dashboard */
+    #dashBtn { position:fixed; right:0; top:50%; transform:translateY(-50%); background:#2c3e50; color:#fff; border:none; padding:10px 6px; border-radius:8px 0 0 8px; cursor:pointer; font-size:14px; z-index:90; writing-mode:vertical-rl; transition:opacity .3s; }
+      #dashboard.open ~ #dashBtn, #dashboard.open + #dashBtn { opacity:0; pointer-events:none; }
+  #dashboard { position:fixed; right:-320px; top:0; width:310px; height:100vh; background:#fff; box-shadow:-3px 0 15px rgba(0,0,0,.15); overflow-y:auto; padding:20px 15px; transition:right .3s ease; z-index:89; }
+  #dashboard.open { right:0; }
+  .dash-card { background:#f8f9fa; border-radius:10px; padding:12px; margin-bottom:12px; }
+  .dash-card h4 { margin:0 0 8px; font-size:13px; color:#666; }
+  .dash-row { display:flex; justify-content:space-between; align-items:center; margin:5px 0; font-size:13px; }
+  .dash-bar-bg { flex:1; height:12px; background:#eee; border-radius:6px; margin:0 8px; }
+  .dash-bar { height:12px; border-radius:6px; }
+  .dash-num { font-weight:700; min-width:20px; text-align:right; }
+  .dash-summary { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
+  .dash-stat { background:#f0f0f0; border-radius:8px; padding:10px; text-align:center; }
+  .dash-stat .num { font-size:22px; font-weight:700; }
+  .dash-stat .label { font-size:11px; color:#666; }
+  .progress-ring { width:80px; height:80px; margin:0 auto 8px; position:relative; }
+  .progress-ring svg { transform:rotate(-90deg); }
+  .progress-ring .pct { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:700; }
+  .dash-alert { background:#fdebd0; border-left:4px solid #e67e22; padding:8px; border-radius:4px; margin-bottom:8px; font-size:12px; }
+  .dash-alert.red { background:#fadbd8; border-left-color:#e74c3c; }
+  #lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,.9); z-index:999; justify-content:center; align-items:center; }
+  #lightbox img { max-width:95%; max-height:95%; border-radius:8px; }
+  #lightbox .lb-close { position:absolute; top:20px; right:30px; color:#fff; font-size:40px; cursor:pointer; }
+  /* Dark Mode */
+  #darkToggle { position:fixed; top:10px; left:10px; z-index:999; background:#333; color:#fff; border:none; border-radius:50%; width:36px; height:36px; font-size:18px; cursor:pointer; }
+  body.dark { background:#0d0d0d !important; color:#e0e0e0; }
+  body.dark h1 { color:#e0e0e0; }
+  body.dark table { background:#1a1a1a; box-shadow:none; }
+  body.dark th { background:#111; }
+  body.dark td { border-color:#333; color:#e0e0e0; background:#1a1a1a; }
+  body.dark tr:hover { background:#222 !important; }
+  body.dark select, body.dark input[type="date"], body.dark input[type="text"] { background:#1a1a1a; color:#e0e0e0; border-color:#444; }
+  body.dark option { background:#1a1a1a; color:#e0e0e0; }
+  body.dark .toolbar input, body.dark .toolbar select { background:#1a1a1a; color:#e0e0e0; border-color:#444; }
+  body.dark #dashboard { background:#111; color:#e0e0e0; }
+  body.dark .dash-card { background:#1a1a1a; }
+  body.dark .dash-stat { background:#1a1a1a; }
+  body.dark .dash-bar-bg { background:#333; }
+  body.dark .tl-panel { background:#1a1a1a; border-color:#333; }
+  body.dark .tl-add input, body.dark .tl-add textarea { background:#222; color:#e0e0e0; border-color:#444; }
+  body.dark .tl-desc { color:#aaa; }
+  body.dark .tl-item:hover { background:rgba(255,255,255,.05); }
+  body.dark .dash-alert { background:#2a2a2a; color:#e0e0e0; }
+  body.dark #dashBtn { background:#1a1a1a; }
+  body.dark .count { color:#999; }
+  body.dark ::placeholder { color:#666; }
+  body.dark td[contenteditable]:focus, body.dark div[contenteditable]:focus { background:#2a2a2a; }
+  body.dark #ctxMenu { background:#1a1a1a; border-color:#444; }
+  body.dark #ctxMenu .ctx-item:hover { background:#333; }
+  body.dark #formatBar button { background:#333; color:#e0e0e0; border-color:#444; }
+  body.dark #formatBar select { background:#1a1a1a; color:#e0e0e0; border-color:#444; }
+  body.dark #formatBar span { color:#999; }
+  .notif-item { padding:8px; border-radius:6px; margin-bottom:6px; font-size:12px; border-left:4px solid; }
+  .notif-item.overdue { background:#fadbd8; border-left-color:#e74c3c; }
+  .notif-item.today { background:#fef9e7; border-left-color:#f39c12; }
+  .notif-item.upcoming { background:#d6eaf8; border-left-color:#3498db; }
+  .notif-item .ni-title { font-weight:700; }
+  .notif-item .ni-date { color:#888; font-size:11px; }
+  body.dark #notifPanel { background:#1a1a1a; border-color:#444; color:#e0e0e0; }
+  body.dark .notif-item.overdue { background:#2a1515; }
+  body.dark .notif-item.today { background:#2a2515; }
+  body.dark .notif-item.upcoming { background:#15202a; }
+</style>
+</head>
+<body>
+<button id="darkToggle" onclick="toggleDark()">🌙</button>
+<button id="notifBell" onclick="toggleNotif()" style="position:fixed;top:12px;right:60px;z-index:999;background:none;border:none;font-size:24px;cursor:pointer;">🔔<span id="notifBadge" style="display:none;position:absolute;top:-4px;right:-6px;background:#e74c3c;color:#fff;font-size:10px;border-radius:50%;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-weight:700;">0</span></button>
+<div id="notifPanel" style="display:none;position:fixed;top:45px;right:20px;width:320px;max-height:400px;overflow-y:auto;background:#fff;border:1px solid #ddd;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.15);z-index:998;padding:12px;">
+<h4 style="margin:0 0 10px;font-size:14px;">🔔 Notifications</h4>
+<div id="notifList"></div>
+</div>
+<h1>🚀 Project Tracker</h1>
+<div class="toolbar">
+<button class="btn-add" onclick="addProject()">➕ New Project</button>
+  <a href="Work_Tracker.html" class="nav-btn">📋 Work Tracker</a>
+  <button class="btn-export" onclick="exportProjectPDF()">📄 PDF</button>
+  <input type="text" id="search" placeholder="🔍 Search..." onkeyup="renderP()">
+  <select id="filterStatus" onchange="renderP()"><option value="">— All Status —</option><option value="Open">Open</option><option value="In Progress">In Progress</option><option value="On Hold">On Hold</option><option value="Completed">Completed</option></select>
+  <select id="filterCat" onchange="renderP()"><option value="">— All Categories —</option><option value="Improvement">Improvement</option><option value="Corrective">Corrective</option><option value="Preventive">Preventive</option><option value="Cost Saving">Cost Saving</option><option value="Safety">Safety</option><option value="Quality">Quality</option><option value="Other">Other</option></select>
+  <span class="count" id="count"></span>
+</div>
+<div id="formatBar" style="margin-bottom:10px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;">
+  <span style="font-size:13px;color:#666;">Format:</span>
+  <button onclick="document.execCommand('bold')" style="font-weight:bold;padding:4px 10px;background:#eee;border:1px solid #ccc;border-radius:8px;cursor:pointer;">B</button>
+  <button onclick="document.execCommand('italic')" style="font-style:italic;padding:4px 10px;background:#eee;border:1px solid #ccc;border-radius:8px;cursor:pointer;">I</button>
+  <button onclick="document.execCommand('underline')" style="text-decoration:underline;padding:4px 10px;background:#eee;border:1px solid #ccc;border-radius:8px;cursor:pointer;">U</button>
+  <button onclick="document.execCommand('strikeThrough')" style="text-decoration:line-through;padding:4px 10px;background:#eee;border:1px solid #ccc;border-radius:8px;cursor:pointer;">S</button>
+  <select onchange="document.execCommand('foreColor',false,this.value);this.selectedIndex=0" style="padding:4px;border:1px solid #ccc;border-radius:6px;cursor:pointer;"><option value="">🎨 Color</option><option value="red">Red</option><option value="blue">Blue</option><option value="green">Green</option><option value="orange">Orange</option><option value="black">Black</option></select>
+  <select onchange="document.execCommand('hiliteColor',false,this.value);this.selectedIndex=0" style="padding:4px;border:1px solid #ccc;border-radius:6px;cursor:pointer;"><option value="">🖍️ Highlight</option><option value="yellow">Yellow</option><option value="#aaf">Blue</option><option value="#afa">Green</option><option value="transparent">None</option></select>
+  <button onclick="document.execCommand('removeFormat')" style="padding:4px 10px;background:#eee;border:1px solid #ccc;border-radius:8px;cursor:pointer;">🧹</button>
+</div>
+<p style="font-size:12px;color:#888;margin:-8px 0 10px;">💡 Right-click on a row to delete project</p>
+<table><thead><tr>
+  <th>#</th><th>Project Name</th><th style="min-width:200px">Problem</th><th style="min-width:180px">Root Cause</th><th style="min-width:180px">Action</th><th>Benefit</th><th>Who</th><th>Status</th><th style="width:60px">%</th><th>Category</th><th>Start</th><th>Target</th><th>End</th><th style="min-width:200px">Notes / Timeline</th>
+</tr></thead><tbody id="projBody"></tbody></table>
+
+<!-- Context Menu -->
+<div id="ctxMenu">
+  <div class="ctx-item ctx-del" onclick="ctxDelete()">🗑️ Delete Project</div>
+</div>
+
+<button id="dashBtn" onclick="toggleDash()">📊</button>
+<div id="dashboard"><h3 style="display:flex;justify-content:space-between;align-items:center;">📊 Dashboard <button onclick="toggleDash()" style="background:none;color:#999;font-size:20px;padding:0 6px;">✕</button></h3><div id="dashContent"></div></div>
+<div id="lightbox" onclick="if(event.target.id==='lightbox')closeLB()"><span class="lb-close" onclick="closeLB()">&times;</span><img id="lb-img" src=""></div>
+<script>
+var projects = JSON.parse(localStorage.getItem("projectTracker") || "[]");
+var openTL = {};
+var ctxTarget = -1;
+
+projects.forEach(function(p){if(!p.timeline)p.timeline=[];if(!p.problemImgs)p.problemImgs=[];if(!p.rootCauseImgs)p.rootCauseImgs=[];if(!p.actionImgs)p.actionImgs=[];p.timeline.forEach(function(t){if(!t.status)t.status="wait";if(!t.title)t.title=t.text||"Update";});});
+
+function saveP(){try{localStorage.setItem("projectTracker",JSON.stringify(projects));}catch(e){alert("⚠️ Storage full!");}}
+function addProject(){projects.unshift({name:"New Project",problem:"",problemImgs:[],rootCause:"",rootCauseImgs:[],action:"",actionImgs:[],benefit:"",status:"Open",category:"Improvement",owner:"",percent:0,start:"",end:"",target:"",note:"",timeline:[]});saveP();renderP();}
+function editP(i,field,el){if(el.value!==undefined)projects[i][field]=field==="percent"?parseInt(el.value):el.value;else projects[i][field]=el.innerHTML;saveP();renderDash();}
+function delProject(i){if(confirm("Delete this project?")){projects.splice(i,1);saveP();renderP();}}
+function pctColor(v){return v>=75?"#27ae60":v>=50?"#f39c12":"#3498db";}
+function optH(opts,cur){return opts.map(function(o){return'<option '+(o===cur?"selected":"")+'>'+o+'<\/option>';}).join("");}
+function pctOpts(cur){var h="";for(var v=0;v<=100;v+=5)h+='<option '+(v===cur?"selected":"")+'>'+v+'<\/option>';return h;}
+
+// Context Menu (Right-click to delete)
+document.addEventListener("click",function(){document.getElementById("ctxMenu").style.display="none";});
+document.addEventListener("contextmenu",function(e){
+  var tr=e.target.closest("tbody tr");
+  if(!tr)return;
+  e.preventDefault();
+  var rows=document.querySelectorAll("#projBody > tr");
+  var idx=-1;
+  rows.forEach(function(r,j){if(r===tr)idx=j;});
+  if(idx===-1)return;
+  ctxTarget=idx;
+  var menu=document.getElementById("ctxMenu");
+  menu.style.display="block";
+  menu.style.left=e.pageX+"px";
+  menu.style.top=e.pageY+"px";
+});
+function ctxDelete(){if(ctxTarget>=0&&ctxTarget<projects.length)delProject(ctxTarget);document.getElementById("ctxMenu").style.display="none";}
+
+function imgHTML(i,field){
+  var imgs=projects[i][field]||[];
+  var h='<div class="img-area">';
+  imgs.forEach(function(src,j){h+='<div class="iw"><img src="'+src+'" onclick="openLB('+i+",'"+field+"',"+j+')"><button class="ir" onclick="event.stopPropagation();removePI('+i+",'"+field+"',"+j+')">&times;<\/button><\/div>';});
+  h+='<\/div><input type="file" accept="image/*" multiple style="font-size:11px;margin-top:4px;" onchange="uploadPI('+i+",'"+field+"',this)\">";
+  return h;
+}
+
+function tlHTML(i){
+  var tl=projects[i].timeline;
+  var isOpen=openTL[i]?"open":"";
+  var h='<button class="btn-tl" onclick="toggleTL('+i+')">📅 Timeline ('+tl.length+')<\/button>';
+  h+='<div class="tl-panel '+isOpen+'" id="tl'+i+'">';
+  h+='<div class="tl-legend"><span><div class="dot" style="background:#bbb"><\/div>Not Started<\/span><span><div class="dot" style="background:#f39c12"><\/div>In Progress<\/span><span><div class="dot" style="background:#27ae60"><\/div>Done<\/span><\/div>';
+  h+='<div class="tl-add"><input type="date" id="tlD'+i+'" value="'+new Date().toISOString().slice(0,10)+'" style="width:110px;"><input type="text" id="tlT'+i+'" placeholder="Title..." style="width:100px;"><textarea id="tlX'+i+'" placeholder="Details..."><\/textarea><button class="btn-add" style="font-size:11px;padding:5px 8px;" onclick="addTL('+i+')">+<\/button><\/div>';
+  h+='<div class="timeline">';
+  if(tl.length===0)h+='<p style="color:#999;font-size:11px;">No items yet.<\/p>';
+  else tl.forEach(function(item,j){
+    var cls=item.status==="done"?"nd-done":item.status==="prog"?"nd-prog":"nd-wait";
+    h+='<div class="tl-item '+cls+'" onclick="cycleTL('+i+','+j+')">';
+    h+='<div class="tl-date">'+item.date+'<\/div>';
+    h+='<div class="tl-title">'+item.title+'<\/div>';
+    if(item.text)h+='<div class="tl-desc">'+item.text+'<\/div>';
+    h+='<button class="tl-del-btn" onclick="event.stopPropagation();delTL('+i+','+j+')" title="Delete">✕<\/button>';
+    h+='<\/div>';
+  });
+  h+='<\/div><\/div>';
+  return h;
+}
+
+function toggleTL(i){if(openTL[i])delete openTL[i];else openTL[i]=true;var el=document.getElementById("tl"+i);if(el)el.classList.toggle("open");}
+
+function renderP(){
+  var keyword=document.getElementById("search").value.toLowerCase();
+  var sF=document.getElementById("filterStatus").value;
+  var cF=document.getElementById("filterCat").value;
+  var tbody=document.getElementById("projBody");
+  tbody.innerHTML="";var count=0;
+  projects.forEach(function(p,i){
+    var text=(p.name+" "+p.problem+" "+p.action+" "+p.owner+" "+p.note).toLowerCase();
+    if(keyword&&text.indexOf(keyword)===-1)return;
+    if(sF&&p.status!==sF)return;
+    if(cF&&p.category!==cF)return;
+    count++;
+    var tr=document.createElement("tr");
+    tr.innerHTML=
+      '<td>'+(i+1)+'<\/td>'+
+      '<td contenteditable onblur="editP('+i+",'name',this)\">"+p.name+'<\/td>'+
+      '<td><div contenteditable onblur="editP('+i+",'problem',this)\">"+p.problem+'<\/div>'+imgHTML(i,"problemImgs")+'<\/td>'+
+      '<td><div contenteditable onblur="editP('+i+",'rootCause',this)\">"+p.rootCause+'<\/div>'+imgHTML(i,"rootCauseImgs")+'<\/td>'+
+      '<td><div contenteditable onblur="editP('+i+",'action',this)\">"+p.action+'<\/div>'+imgHTML(i,"actionImgs")+'<\/td>'+
+      '<td contenteditable onblur="editP('+i+",'benefit',this)\">"+p.benefit+'<\/td>'+
+      '<td contenteditable onblur="editP('+i+",'owner',this)\">"+p.owner+'<\/td>'+
+      '<td><select onchange="editP('+i+",'status',this)\">"+optH(["Open","In Progress","On Hold","Completed"],p.status)+'<\/select><\/td>'+
+      '<td><select onchange="editP('+i+",'percent',this)\">"+pctOpts(p.percent)+'<\/select><\/td>'+
+      '<td><select onchange="editP('+i+",'category',this)\">"+optH(["Improvement","Corrective","Preventive","Cost Saving","Safety","Quality","Other"],p.category)+'<\/select><\/td>'+
+      '<td><input type="date" value="'+p.start+'" onchange="editP('+i+",'start',this)\"><\/td>"+
+      '<td><input type="date" value="'+p.target+'" onchange="editP('+i+",'target',this)\"><\/td>"+
+      '<td><input type="date" value="'+p.end+'" onchange="editP('+i+",'end',this)\"><\/td>"+
+      '<td><div contenteditable onblur="editP('+i+",'note',this)\">"+p.note+'<\/div>'+tlHTML(i)+'<\/td>';
+    tbody.appendChild(tr);
+  });
+  document.getElementById("count").textContent="Showing: "+count+" / "+projects.length;
+  renderDash();
+  renderNotif();
+}
+
+function addTL(i){var d=document.getElementById("tlD"+i).value;var t=document.getElementById("tlT"+i).value.trim();var x=document.getElementById("tlX"+i).value.trim();if(!t&&!x){alert("Enter title or details.");return;}projects[i].timeline.push({date:d,title:t||"Step "+(projects[i].timeline.length+1),text:x,status:"wait"});openTL[i]=true;saveP();renderP();}
+function delTL(i,j){if(confirm("Delete this step?")){projects[i].timeline.splice(j,1);openTL[i]=true;saveP();renderP();}}
+function cycleTL(i,j){var item=projects[i].timeline[j];if(item.status==="wait")item.status="prog";else if(item.status==="prog")item.status="done";else item.status="wait";openTL[i]=true;saveP();renderP();}
+
+function uploadPI(i,field,input){var files=Array.from(input.files);if(!files.length)return;if(!projects[i][field])projects[i][field]=[];var loaded=0;files.forEach(function(file){if(file.size>5*1024*1024){loaded++;if(loaded===files.length){saveP();renderP();}return;}var reader=new FileReader();reader.onload=function(e){compressImg(e.target.result,800,0.6,function(c){projects[i][field].push(c);loaded++;if(loaded===files.length){saveP();renderP();}});};reader.readAsDataURL(file);});}
+function removePI(i,field,j){if(confirm("Remove?")){projects[i][field].splice(j,1);saveP();renderP();}}
+function compressImg(b,maxW,q,cb){var img=new Image();img.onload=function(){var w=img.width,h=img.height;if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}var c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);cb(c.toDataURL("image/jpeg",q));};img.src=b;}
+
+function openLB(i,field,j){document.getElementById("lb-img").src=projects[i][field][j];document.getElementById("lightbox").style.display="flex";}
+function closeLB(){document.getElementById("lightbox").style.display="none";}
+
+function toggleDash(){
+  var db = document.getElementById("dashboard");
+  db.classList.toggle("open");
+  document.getElementById("dashBtn").style.display = db.classList.contains("open") ? "none" : "block";
+}
+function renderDash(){
+  var total=projects.length;if(total===0){document.getElementById("dashContent").innerHTML='<p style="color:#999;">No projects.<\/p>';return;}
+  var sO=0,sP=0,sD=0,sH=0,overdue=0,today=new Date().toISOString().slice(0,10),pc={};
+  projects.forEach(function(p){if(p.status==="Open")sO++;else if(p.status==="In Progress")sP++;else if(p.status==="Completed")sD++;else sH++;if(p.target&&p.target<today&&p.status!=="Completed")overdue++;if(p.owner)pc[p.owner]=(pc[p.owner]||0)+1;});
+  var pct=Math.round((sD/total)*100),circ=2*Math.PI*35,offset=circ-(pct/100)*circ,rc=pct>=75?"#27ae60":pct>=50?"#f39c12":"#e74c3c";
+  var h='<div class="dash-summary"><div class="dash-stat"><div class="num">'+total+'<\/div><div class="label">Total<\/div><\/div><div class="dash-stat"><div class="num" style="color:#2471a3">'+sP+'<\/div><div class="label">In Progress<\/div><\/div><div class="dash-stat"><div class="num" style="color:#1e8449">'+sD+'<\/div><div class="label">Done<\/div><\/div><div class="dash-stat"><div class="num" style="color:#c0392b">'+sH+'<\/div><div class="label">On Hold<\/div><\/div><\/div>';
+  if(overdue>0)h+='<div class="dash-alert red">⚠️ '+overdue+' overdue!<\/div>';
+  h+='<div class="dash-card"><h4>✅ Completion<\/h4><div class="progress-ring"><svg width="80" height="80"><circle cx="40" cy="40" r="35" fill="none" stroke="#eee" stroke-width="8"><\/circle><circle cx="40" cy="40" r="35" fill="none" stroke="'+rc+'" stroke-width="8" stroke-dasharray="'+circ+'" stroke-dashoffset="'+offset+'" stroke-linecap="round"><\/circle><\/svg><div class="pct" style="color:'+rc+'">'+pct+'%<\/div><\/div><\/div>';
+  h+='<div class="dash-card"><h4>📈 Status<\/h4>'+dBar("Open",sO,total,"#3498db")+dBar("In Progress",sP,total,"#f39c12")+dBar("Completed",sD,total,"#27ae60")+dBar("On Hold",sH,total,"#e74c3c")+'<\/div>';
+  var persons=Object.keys(pc);if(persons.length>0){h+='<div class="dash-card"><h4>👥 By Person<\/h4>';persons.sort(function(a,b){return pc[b]-pc[a];});persons.forEach(function(p){h+=dBar(p,pc[p],total,"#8e44ad");});h+='<\/div>';}
+  document.getElementById("dashContent").innerHTML=h;
+}
+function dBar(l,v,m,c){var w=m>0?Math.round((v/m)*100):0;return'<div class="dash-row"><span style="min-width:80px;">'+l+'<\/span><div class="dash-bar-bg"><div class="dash-bar" style="width:'+w+'%;background:'+c+'"><\/div><\/div><span class="dash-num">'+v+'<\/span><\/div>';}
+
+function exportProjectPDF(){
+  var win=window.open("","_blank");
+  var html='<html><head><meta charset="UTF-8"><title>Project Report<\/title><style>body{font-family:Arial;padding:20px}h1{text-align:center}.p{border:1px solid #ccc;border-radius:8px;padding:15px;margin:12px 0;page-break-inside:avoid}.p h3{margin:0 0 8px}.f{margin:5px 0}.f b{color:#555}.imgs img{width:150px;max-height:110px;margin:3px;border-radius:4px}.tli{margin:3px 0;padding-left:10px;border-left:3px solid #3498db;font-size:12px}@media print{button{display:none}}<\/style><\/head><body>';
+  html+='<h1>🚀 Project Report<\/h1><button onclick="window.print()" style="padding:10px 20px;background:#c0392b;color:#fff;border:none;border-radius:8px;cursor:pointer;">🖨️ Print<\/button>';
+  projects.forEach(function(p,i){
+    html+='<div class="p"><h3>'+(i+1)+'. '+(p.name||"")+'<\/h3>';
+    html+='<div class="f"><b>Status:<\/b> '+p.status+' | <b>Category:<\/b> '+p.category+' | <b>Who:<\/b> '+(p.owner||"-")+' | <b>%:<\/b> '+p.percent+'%<\/div>';
+    html+='<div class="f"><b>Start:<\/b> '+(p.start||"-")+' | <b>Target:<\/b> '+(p.target||"-")+' | <b>End:<\/b> '+(p.end||"-")+'<\/div>';
+    html+='<div class="f"><b>Problem:<\/b> '+(p.problem||"-")+'<\/div>';
+    if(p.problemImgs&&p.problemImgs.length){html+='<div class="imgs">';p.problemImgs.forEach(function(s){html+='<img src="'+s+'">';});html+='<\/div>';}
+    html+='<div class="f"><b>Root Cause:<\/b> '+(p.rootCause||"-")+'<\/div>';
+    if(p.rootCauseImgs&&p.rootCauseImgs.length){html+='<div class="imgs">';p.rootCauseImgs.forEach(function(s){html+='<img src="'+s+'">';});html+='<\/div>';}
+    html+='<div class="f"><b>Action:<\/b> '+(p.action||"-")+'<\/div>';
+    if(p.actionImgs&&p.actionImgs.length){html+='<div class="imgs">';p.actionImgs.forEach(function(s){html+='<img src="'+s+'">';});html+='<\/div>';}
+    html+='<div class="f"><b>Benefit:<\/b> '+(p.benefit||"-")+'<\/div>';
+    html+='<div class="f"><b>Notes:<\/b> '+(p.note||"-")+'<\/div>';
+    if(p.timeline&&p.timeline.length){html+='<div class="f"><b>Timeline:<\/b><\/div>';p.timeline.forEach(function(t){var sc=t.status==="done"?"#27ae60":t.status==="prog"?"#f39c12":"#bbb";html+='<div class="tli" style="border-left-color:'+sc+'"><b>'+t.date+'<\/b> '+t.title+(t.text?' - '+t.text:'')+'<\/div>';});}
+    html+='<\/div>';
+  });
+  html+='<\/body><\/html>';win.document.write(html);win.document.close();
+}
+
+function toggleDark(){document.body.classList.toggle("dark");var d=document.body.classList.contains("dark");localStorage.setItem("darkMode",d?"on":"off");document.getElementById("darkToggle").textContent=d?"☀️":"🌙";}
+if(localStorage.getItem("darkMode")==="on"){document.body.classList.add("dark");document.getElementById("darkToggle").textContent="☀️";}
+// Notifications
+function toggleNotif(){var p=document.getElementById("notifPanel");p.style.display=p.style.display==="block"?"none":"block";}
+document.addEventListener("click",function(e){if(!e.target.closest("#notifBell")&&!e.target.closest("#notifPanel"))document.getElementById("notifPanel").style.display="none";});
+
+function renderNotif(){
+  var today=new Date();var todayStr=today.toISOString().slice(0,10);
+  var tomorrow=new Date(today);tomorrow.setDate(tomorrow.getDate()+1);var tomorrowStr=tomorrow.toISOString().slice(0,10);
+  var in3=new Date(today);in3.setDate(in3.getDate()+3);var in3Str=in3.toISOString().slice(0,10);
+  var notifs=[];
+
+  projects.forEach(function(p){
+    if(p.status==="Completed")return;
+    var deadline=p.target||p.end||"";
+    if(!deadline)return;
+    if(deadline<todayStr){
+      notifs.push({type:"overdue",task:p.name,date:deadline,msg:"⚠️ OVERDUE! Was due "+deadline});
+    } else if(deadline===todayStr){
+      notifs.push({type:"today",task:p.name,date:deadline,msg:"⏰ Due TODAY!"});
+    } else if(deadline===tomorrowStr){
+      notifs.push({type:"upcoming",task:p.name,date:deadline,msg:"📅 Due TOMORROW"});
+    } else if(deadline<=in3Str){
+      notifs.push({type:"upcoming",task:p.name,date:deadline,msg:"📅 Due in "+Math.ceil((new Date(deadline)-today)/(1000*60*60*24))+" days"});
+    }
+  });
+
+  notifs.sort(function(a,b){var order={overdue:0,today:1,upcoming:2};return order[a.type]-order[b.type];});
+
+  var badge=document.getElementById("notifBadge");
+  if(notifs.length>0){badge.style.display="flex";badge.textContent=notifs.length;}
+  else{badge.style.display="none";}
+
+  var list=document.getElementById("notifList");
+  if(notifs.length===0){list.innerHTML='<p style="color:#999;font-size:12px;">✅ No upcoming deadlines!<\/p>';return;}
+  var h="";
+  notifs.forEach(function(n){
+    h+='<div class="notif-item '+n.type+'">';
+    h+='<div class="ni-title">'+n.task+'<\/div>';
+    h+='<div>'+n.msg+'<\/div>';
+    h+='<div class="ni-date">Deadline: '+n.date+'<\/div>';
+    h+='<\/div>';
+  });
+  list.innerHTML=h;
+}
+renderP();
+</script>
+</body>
+</html>
