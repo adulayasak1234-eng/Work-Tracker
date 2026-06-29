@@ -282,7 +282,7 @@ function renderAll(){
     var tr=document.createElement("tr");
     tr.setAttribute("data-idx",i);
     tr.innerHTML=
-      '<td>'+(i+1)+'<\/td>'+
+      '<td>'+count+'<\/td>'+
       '<td contenteditable onblur="edit('+i+",'task',this)\">"+row.task+'<\/td>'+
       '<td><div contenteditable onblur="edit('+i+",'detail',this)\">"+row.detail+'<\/div>'+imgHTML(i)+'<\/td>'+
       '<td contenteditable onblur="edit('+i+",'solution',this)\">"+row.solution+'<\/td>'+
