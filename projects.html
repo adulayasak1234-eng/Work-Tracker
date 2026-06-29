@@ -154,7 +154,19 @@
 <p style="font-size:12px;color:#888;margin:-8px 0 10px;">💡 Right-click on a row to delete project</p>
 <table><thead><tr>
   <th>#</th><th>Project Name</th><th style="min-width:200px">Problem</th><th style="min-width:180px">Root Cause</th><th style="min-width:180px">Action</th><th>Benefit</th><th>Who</th><th>Status</th><th style="width:60px">%</th><th>Category</th><th>Start</th><th>Target</th><th>End</th><th style="min-width:200px">Notes / Timeline</th>
-</tr></thead><tbody id="projBody"></tbody></table>
+</tr></thead><tbody id="projBody"></tbody></table> 
+ <div style="margin-top:15px;">
+  <button onclick="toggleDoneP()" style="background:#1e8449;color:#fff;padding:9px 16px;border:none;border-radius:8px;cursor:pointer;font-weight:600;">📦 Completed Projects (<span id="doneCountP">0</span>)</button>
+  <span style="color:#888;font-size:12px;margin-left:10px;">Projects with status "Completed" are hidden from main table.</span>
+</div>
+<div id="doneSectionP" style="display:none;margin-top:10px;">
+  <table>
+    <thead><tr>
+      <th>#</th><th>Project Name</th><th>Problem</th><th>Action</th><th>Who</th><th>Category</th><th>Start</th><th>End</th><th>Restore</th>
+    </tr></thead>
+    <tbody id="doneTbodyP"></tbody>
+  </table>
+</div>
 
 <!-- Context Menu -->
 <div id="ctxMenu">
@@ -244,7 +256,7 @@ function renderP(){
     count++;
     var tr=document.createElement("tr");
     tr.innerHTML=
-      '<td>'+(i+1)+'<\/td>'+
+      '<td>'+count+'<\/td>'+
       '<td contenteditable onblur="editP('+i+",'name',this)\">"+p.name+'<\/td>'+
       '<td><div contenteditable onblur="editP('+i+",'problem',this)\">"+p.problem+'<\/div>'+imgHTML(i,"problemImgs")+'<\/td>'+
       '<td><div contenteditable onblur="editP('+i+",'rootCause',this)\">"+p.rootCause+'<\/div>'+imgHTML(i,"rootCauseImgs")+'<\/td>'+
@@ -263,6 +275,7 @@ function renderP(){
   document.getElementById("count").textContent="Showing: "+count+" / "+projects.length;
   renderDash();
   renderNotif();
+  renderDoneP();
 }
 
 function addTL(i){var d=document.getElementById("tlD"+i).value;var t=document.getElementById("tlT"+i).value.trim();var x=document.getElementById("tlX"+i).value.trim();if(!t&&!x){alert("Enter title or details.");return;}projects[i].timeline.push({date:d,title:t||"Step "+(projects[i].timeline.length+1),text:x,status:"wait"});openTL[i]=true;saveP();renderP();}
@@ -331,6 +344,7 @@ function renderNotif(){
 
   projects.forEach(function(p){
     if(p.status==="Completed")return;
+    if(p.status==="Completed")return;
     var deadline=p.target||p.end||"";
     if(!deadline)return;
     if(deadline<todayStr){
@@ -374,6 +388,44 @@ function renderNotif(){
   item.text=newText;
   item.date=newDate||item.date;
   openTL[i]=true;
+  saveP();
+  renderP();
+}
+ // Completed Projects
+var showDoneP = false;
+
+function toggleDoneP(){
+  showDoneP = !showDoneP;
+  document.getElementById("doneSectionP").style.display = showDoneP ? "block" : "none";
+}
+
+function renderDoneP(){
+  var tbody = document.getElementById("doneTbodyP");
+  tbody.innerHTML = "";
+  var c = 0;
+  projects.forEach(function(p, i){
+    if(p.status !== "Completed") return;
+    c++;
+    var tr = document.createElement("tr");
+    tr.style.background = "#eafaf1";
+    tr.innerHTML =
+      '<td>' + c + '<\/td>' +
+      '<td>' + p.name + '<\/td>' +
+      '<td>' + (p.problem || "") + '<\/td>' +
+      '<td>' + (p.action || "") + '<\/td>' +
+      '<td>' + (p.owner || "") + '<\/td>' +
+      '<td>' + (p.category || "") + '<\/td>' +
+      '<td>' + (p.start || "") + '<\/td>' +
+      '<td>' + (p.end || "") + '<\/td>' +
+      '<td><button class="btn-add" style="font-size:11px;padding:5px 8px;" onclick="reopenProject(' + i + ')">🔄 Reopen<\/button><\/td>';
+    tbody.appendChild(tr);
+  });
+  document.getElementById("doneCountP").textContent = c;
+}
+
+function reopenProject(i){
+  projects[i].status = "In Progress";
+  projects[i].percent = 50;
   saveP();
   renderP();
 }
