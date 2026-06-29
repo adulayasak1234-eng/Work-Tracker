@@ -220,6 +220,7 @@ function tlHTML(i){
     h+='<div class="tl-date">'+item.date+'<\/div>';
     h+='<div class="tl-title">'+item.title+'<\/div>';
     if(item.text)h+='<div class="tl-desc">'+item.text+'<\/div>';
+    h+='<button class="tl-edit-btn" onclick="event.stopPropagation();editTL('+i+','+j+')" title="Edit">✏️<\/button>';
     h+='<button class="tl-del-btn" onclick="event.stopPropagation();delTL('+i+','+j+')" title="Delete">✕<\/button>';
     h+='<\/div>';
   });
@@ -360,6 +361,21 @@ function renderNotif(){
     h+='<\/div>';
   });
   list.innerHTML=h;
+}
+ function editTL(i,j){
+  var item=projects[i].timeline[j];
+  var newTitle=prompt("Edit title:",item.title);
+  if(newTitle===null)return;
+  var newText=prompt("Edit description:",item.text||"");
+  if(newText===null)return;
+  var newDate=prompt("Edit date (YYYY-MM-DD):",item.date);
+  if(newDate===null)return;
+  item.title=newTitle||item.title;
+  item.text=newText;
+  item.date=newDate||item.date;
+  openTL[i]=true;
+  saveP();
+  renderP();
 }
 renderP();
 </script>
