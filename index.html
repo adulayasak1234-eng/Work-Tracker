@@ -6,99 +6,126 @@
 <title>Work Tracker</title>
 <style>
   * { box-sizing: border-box; font-family: "Segoe UI", Arial, sans-serif; }
-  body { margin: 0; background: #f0f2f5; color: #2c3e50; padding: 20px; }
-  h1 { text-align: center; margin-bottom: 15px; }
-  .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; align-items: center; }
-  .toolbar input, .toolbar select { padding: 8px 12px; border: 1px solid #ccc; border-radius: 8px; }
-  button { cursor: pointer; border: none; border-radius: 8px; padding: 9px 16px; font-weight: 600; }
-  a.nav-btn { background:#e67e22; color:#fff; padding:9px 16px; border-radius:8px; font-weight:600; text-decoration:none; }
+  body { margin: 0; background: #f0f2f5; color: #2c3e50; padding: 0; height:100vh; display:flex; flex-direction:column; }
+  h1 { text-align: center; margin:0 0 10px; }
+  #topFixed { position:sticky; top:0; z-index:50; background:#f0f2f5; padding:12px 20px 10px; border-bottom:1px solid #ddd; display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap; }
+  #topLeft { flex:1; min-width:300px; }
+  #scrollArea { flex:1; overflow-y:auto; padding:10px 20px 20px; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; align-items: center; }
+  .toolbar input, .toolbar select { padding: 7px 10px; border: 1px solid #ccc; border-radius: 8px; font-size:12px; }
+  button { cursor: pointer; border: none; border-radius: 8px; padding: 8px 14px; font-weight: 600; font-size:12px; }
+  a.nav-btn { background:#e67e22; color:#fff; padding:8px 14px; border-radius:8px; font-weight:600; text-decoration:none; font-size:12px; }
   .btn-add { background: #27ae60; color: #fff; }
   .btn-export { background: #2980b9; color: #fff; }
   .btn-tl { background: #8e44ad; color: #fff; padding: 4px 8px; font-size:11px; margin-top:6px; }
-  .count { color:#7f8c8d; font-size: 14px; margin-left:auto; }
+  .count { color:#7f8c8d; font-size: 13px; margin-left:auto; }
   table { width: 100%; border-collapse: collapse; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.08); border-radius: 10px; overflow:hidden; }
-  th { background: #1a5c3a; color: #fff; padding: 10px 6px; font-size: 12px; text-align: left; }
-  td { border: 1px solid #e1e5ea; padding: 8px 6px; font-size: 13px; vertical-align: top; }
+  th { background: #1a5c3a; color: #fff; padding: 9px 6px; font-size: 11px; text-align: left; }
+  td { border: 1px solid #e1e5ea; padding: 7px 5px; font-size: 12px; vertical-align: top; }
   td[contenteditable]:focus, div[contenteditable]:focus { outline: 2px solid #3498db; background: #f0f8ff; }
-  select { padding: 4px; border-radius: 6px; cursor: pointer; font-size:12px; }
-  input[type="date"] { padding: 4px; border: 1px solid #ccc; border-radius: 6px; font-size:12px; }
+  select { padding: 3px; border-radius: 6px; cursor: pointer; font-size:11px; }
+  input[type="date"] { padding: 3px; border: 1px solid #ccc; border-radius: 6px; font-size:11px; }
   tr:hover { background:#f8f9fa; }
-  .img-area { margin-top:6px; }
-  .img-area img { width:180px; max-height:140px; object-fit:cover; border-radius:6px; cursor:zoom-in; border:1px solid #ddd; margin:3px; display:block; }
+  .img-area { margin-top:5px; }
+  .img-area img { width:160px; max-height:120px; object-fit:cover; border-radius:6px; cursor:zoom-in; border:1px solid #ddd; margin:2px; display:block; }
   .img-area .iw { display:inline-block; position:relative; }
-  .img-area .ir { position:absolute; top:2px; right:2px; background:rgba(231,76,60,.9); color:#fff; border:none; border-radius:50%; width:18px; height:18px; cursor:pointer; font-size:11px; display:none; }
+  .img-area .ir { position:absolute; top:2px; right:2px; background:rgba(231,76,60,.9); color:#fff; border:none; border-radius:50%; width:16px; height:16px; cursor:pointer; font-size:10px; display:none; }
   .img-area .iw:hover .ir { display:block; }
-  /* Context Menu */
-  #ctxMenu { display:none; position:fixed; z-index:1000; background:#fff; border:1px solid #ddd; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,.15); padding:6px 0; min-width:160px; }
-  #ctxMenu .ctx-item { padding:8px 16px; font-size:13px; cursor:pointer; display:flex; align-items:center; gap:8px; }
+  #ctxMenu { display:none; position:fixed; z-index:1000; background:#fff; border:1px solid #ddd; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,.15); padding:6px 0; min-width:150px; }
+  #ctxMenu .ctx-item { padding:8px 16px; font-size:12px; cursor:pointer; }
   #ctxMenu .ctx-item:hover { background:#f0f0f0; }
   #ctxMenu .ctx-del { color:#e74c3c; }
-  /* Format Bar */
-  #formatBar { margin-bottom:10px; display:flex; flex-wrap:wrap; gap:5px; align-items:center; }
-  #formatBar button { padding:4px 10px; background:#eee; border:1px solid #ccc; }
-  #formatBar select { padding:4px; border:1px solid #ccc; border-radius:6px; }
-  #formatBar span { font-size:13px; color:#666; }
-  /* Timeline */
-  .tl-panel { display:none; background:#f9f9f9; border:1px solid #ddd; padding:12px; margin-top:6px; border-radius:8px; }
+  #formatBar { margin-bottom:6px; display:flex; flex-wrap:wrap; gap:4px; align-items:center; }
+  #formatBar button { padding:3px 8px; background:#eee; border:1px solid #ccc; font-size:11px; }
+  #formatBar select { padding:3px; border:1px solid #ccc; border-radius:6px; font-size:11px; }
+  #formatBar span { font-size:11px; color:#666; }
+  .tl-panel { display:none; background:#f9f9f9; border:1px solid #ddd; padding:10px; margin-top:5px; border-radius:8px; }
   .tl-panel.open { display:block; }
-  .tl-add { display:flex; gap:4px; margin-bottom:10px; flex-wrap:wrap; }
-  .tl-add input, .tl-add textarea { padding:5px; border:1px solid #ccc; border-radius:6px; font-size:11px; }
-  .tl-add textarea { flex:1; min-width:80px; resize:none; height:28px; }
-  .timeline { position:relative; padding-left:18px; }
-  .timeline::before { content:""; position:absolute; left:6px; top:0; bottom:0; width:3px; background:linear-gradient(#3498db,#2ecc71); border-radius:2px; }
-  .tl-item { position:relative; margin-bottom:10px; padding-left:14px; padding-right:24px; cursor:pointer; border-radius:6px; padding-top:4px; padding-bottom:4px; transition:background .2s; }
+  .tl-add { display:flex; gap:4px; margin-bottom:8px; flex-wrap:wrap; }
+  .tl-add input, .tl-add textarea { padding:4px; border:1px solid #ccc; border-radius:6px; font-size:10px; }
+  .tl-add textarea { flex:1; min-width:60px; resize:none; height:26px; }
+  .timeline { position:relative; padding-left:16px; }
+  .timeline::before { content:""; position:absolute; left:5px; top:0; bottom:0; width:3px; background:linear-gradient(#3498db,#2ecc71); border-radius:2px; }
+  .tl-item { position:relative; margin-bottom:8px; padding-left:12px; padding-right:40px; cursor:pointer; border-radius:6px; padding-top:3px; padding-bottom:3px; }
   .tl-item:hover { background:rgba(0,0,0,.03); }
-  .tl-item::before { content:""; position:absolute; left:-14px; top:8px; width:14px; height:14px; border-radius:50%; border:2px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.2); }
+  .tl-item::before { content:""; position:absolute; left:-12px; top:6px; width:12px; height:12px; border-radius:50%; border:2px solid #fff; box-shadow:0 1px 3px rgba(0,0,0,.2); }
   .tl-item.nd-done::before { background:#27ae60; }
   .tl-item.nd-prog::before { background:#f39c12; }
   .tl-item.nd-wait::before { background:#bbb; }
-  .tl-title { font-weight:700; font-size:12px; }
-  .tl-desc { font-size:11px; color:#555; }
-  .tl-date { font-size:10px; color:#888; }
-  .tl-del-btn { position:absolute; right:4px; top:4px; background:none; color:#ccc; border:none; width:auto; height:auto; font-size:11px; cursor:pointer; display:none; padding:2px 4px; opacity:0.5; }
+  .tl-title { font-weight:700; font-size:11px; }
+  .tl-desc { font-size:10px; color:#555; }
+  .tl-date { font-size:9px; color:#888; }
+  .tl-del-btn,.tl-edit-btn { position:absolute; top:4px; background:none; color:#ccc; border:none; font-size:10px; cursor:pointer; display:none; padding:2px; opacity:.5; }
+  .tl-del-btn { right:4px; }
+  .tl-edit-btn { right:20px; }
   .tl-del-btn:hover { opacity:1; color:#e74c3c; }
-  .tl-edit-btn { position:absolute; right:24px; top:4px; background:none; color:#ccc; border:none; width:auto; height:auto; font-size:11px; cursor:pointer; display:none; padding:2px 4px; opacity:0.5; }
   .tl-edit-btn:hover { opacity:1; color:#3498db; }
-  .tl-item:hover .tl-edit-btn { display:block; }
-  .tl-item:hover .tl-del-btn { display:block; }
-  .tl-legend { display:flex; gap:8px; font-size:10px; margin-bottom:8px; }
-  .tl-legend .dot { width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:3px; }
-  /* Notification Bell */
-  #notifBell { position:fixed; top:12px; right:60px; z-index:999; background:none; border:none; font-size:24px; cursor:pointer; }
-  #notifBadge { position:absolute; top:-4px; right:-6px; background:#e74c3c; color:#fff; font-size:10px; border-radius:50%; min-width:18px; height:18px; display:flex; align-items:center; justify-content:center; font-weight:700; }
-  #notifPanel { display:none; position:fixed; top:45px; right:20px; width:320px; max-height:400px; overflow-y:auto; background:#fff; border:1px solid #ddd; border-radius:10px; box-shadow:0 4px 20px rgba(0,0,0,.15); z-index:998; padding:12px; }
-  #notifPanel h4 { margin:0 0 10px; font-size:14px; }
-  .notif-item { padding:8px; border-radius:6px; margin-bottom:6px; font-size:12px; border-left:4px solid; }
+  .tl-item:hover .tl-del-btn, .tl-item:hover .tl-edit-btn { display:block; }
+  .tl-legend { display:flex; gap:6px; font-size:9px; margin-bottom:6px; }
+  .tl-legend .dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:2px; }
+  /* Notification */
+  #notifBell { position:fixed; top:10px; right:20px; z-index:999; background:none; border:none; font-size:22px; cursor:pointer; }
+  #notifBadge { position:absolute; top:-4px; right:-6px; background:#e74c3c; color:#fff; font-size:9px; border-radius:50%; min-width:16px; height:16px; display:none; align-items:center; justify-content:center; font-weight:700; }
+  #notifPanel { display:none; position:fixed; top:40px; right:10px; width:300px; max-height:380px; overflow-y:auto; background:#fff; border:1px solid #ddd; border-radius:10px; box-shadow:0 4px 20px rgba(0,0,0,.15); z-index:998; padding:10px; }
+  .notif-item { padding:7px; border-radius:6px; margin-bottom:5px; font-size:11px; border-left:4px solid; cursor:pointer; transition:opacity .3s; }
+  .notif-item:hover { opacity:.7; }
   .notif-item.overdue { background:#fadbd8; border-left-color:#e74c3c; }
   .notif-item.today { background:#fef9e7; border-left-color:#f39c12; }
   .notif-item.upcoming { background:#d6eaf8; border-left-color:#3498db; }
   .notif-item .ni-title { font-weight:700; }
-  .notif-item .ni-date { color:#888; font-size:11px; }
+  .notif-item .ni-date { color:#888; font-size:10px; }
+  /* Calendar Inline */
+  #calInline { width:280px; min-width:280px; background:#fff; border:1px solid #ddd; border-radius:10px; padding:10px; }
+  .cal-nav { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+  .cal-nav button { background:none; border:none; font-size:16px; cursor:pointer; padding:2px 6px; }
+  .cal-nav span { font-weight:700; font-size:12px; }
+  .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:1px; text-align:center; font-size:10px; }
+  .cal-grid .hd { font-weight:700; color:#666; padding:3px; }
+  .cal-day { padding:4px 2px; border-radius:5px; cursor:pointer; min-height:26px; display:flex; align-items:center; justify-content:center; position:relative; }
+  .cal-day:hover { background:#eee; }
+  .cal-day.today { background:#3498db; color:#fff; font-weight:700; }
+  .cal-day.selected { background:#2ecc71; color:#fff; }
+  .cal-day.holiday { background:#ffe0e0; color:#c0392b; font-weight:700; }
+  .cal-day.payday { border:2px solid #3498db; }
+  .cal-day.has-event::after { content:""; position:absolute; bottom:1px; left:50%; transform:translateX(-50%); width:4px; height:4px; background:#e67e22; border-radius:50%; }
+  .cal-legend { display:flex; gap:6px; font-size:9px; margin-bottom:6px; flex-wrap:wrap; }
+  .cal-legend span { display:flex; align-items:center; gap:2px; }
+  .cal-legend .lg { width:8px; height:8px; border-radius:3px; display:inline-block; }
+  .cal-events { margin-top:6px; border-top:1px solid #eee; padding-top:6px; max-height:120px; overflow-y:auto; }
+  .cal-events h5 { margin:0 0 4px; font-size:11px; }
+  .cal-ev-item { padding:3px 6px; margin:2px 0; border-radius:4px; font-size:10px; display:flex; justify-content:space-between; }
+  .cal-ev-item.hol { background:#ffe0e0; }
+  .cal-ev-item.pay { background:#e0f0ff; }
+  .cal-ev-item.usr { background:#fff8e0; }
+  .cal-ev-del { color:#e74c3c; cursor:pointer; font-size:9px; }
+  .cal-add { margin-top:6px; display:flex; gap:3px; }
+  .cal-add input { flex:1; padding:4px; border:1px solid #ccc; border-radius:6px; font-size:10px; }
   /* Dashboard */
-  #dashBtn { position:fixed; right:0; top:50%; transform:translateY(-50%); background:#2c3e50; color:#fff; border:none; padding:10px 6px; border-radius:8px 0 0 8px; cursor:pointer; font-size:14px; z-index:90; writing-mode:vertical-rl; }
-  #dashboard { position:fixed; right:-320px; top:0; width:310px; height:100vh; background:#fff; box-shadow:-3px 0 15px rgba(0,0,0,.15); overflow-y:auto; padding:20px 15px; transition:right .3s ease; z-index:89; }
+  #dashBtn { position:fixed; right:0; top:50%; transform:translateY(-50%); background:#2c3e50; color:#fff; border:none; padding:8px 5px; border-radius:8px 0 0 8px; cursor:pointer; font-size:12px; z-index:90; writing-mode:vertical-rl; }
+  #dashboard { position:fixed; right:-310px; top:0; width:300px; height:100vh; background:#fff; box-shadow:-3px 0 15px rgba(0,0,0,.15); overflow-y:auto; padding:15px 12px; transition:right .3s ease; z-index:89; }
   #dashboard.open { right:0; }
-  .dash-card { background:#f8f9fa; border-radius:10px; padding:12px; margin-bottom:12px; }
-  .dash-card h4 { margin:0 0 8px; font-size:13px; color:#666; }
-  .dash-row { display:flex; justify-content:space-between; align-items:center; margin:5px 0; font-size:13px; }
-  .dash-bar-bg { flex:1; height:12px; background:#eee; border-radius:6px; margin:0 8px; }
-  .dash-bar { height:12px; border-radius:6px; }
-  .dash-num { font-weight:700; min-width:20px; text-align:right; }
-  .dash-summary { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; }
-  .dash-stat { background:#f0f0f0; border-radius:8px; padding:10px; text-align:center; }
-  .dash-stat .num { font-size:22px; font-weight:700; }
-  .dash-stat .label { font-size:11px; color:#666; }
-  .progress-ring { width:80px; height:80px; margin:0 auto 8px; position:relative; }
+  .dash-card { background:#f8f9fa; border-radius:10px; padding:10px; margin-bottom:10px; }
+  .dash-card h4 { margin:0 0 6px; font-size:12px; color:#666; }
+  .dash-row { display:flex; justify-content:space-between; align-items:center; margin:4px 0; font-size:12px; }
+  .dash-bar-bg { flex:1; height:10px; background:#eee; border-radius:5px; margin:0 6px; }
+  .dash-bar { height:10px; border-radius:5px; }
+  .dash-num { font-weight:700; min-width:18px; text-align:right; font-size:11px; }
+  .dash-summary { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:10px; }
+  .dash-stat { background:#f0f0f0; border-radius:8px; padding:8px; text-align:center; }
+  .dash-stat .num { font-size:20px; font-weight:700; }
+  .dash-stat .label { font-size:10px; color:#666; }
+  .progress-ring { width:70px; height:70px; margin:0 auto 6px; position:relative; }
   .progress-ring svg { transform:rotate(-90deg); }
-  .progress-ring .pct { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:700; }
-  .dash-alert { background:#fdebd0; border-left:4px solid #e67e22; padding:8px; border-radius:4px; margin-bottom:8px; font-size:12px; }
+  .progress-ring .pct { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; }
+  .dash-alert { background:#fdebd0; border-left:4px solid #e67e22; padding:6px; border-radius:4px; margin-bottom:6px; font-size:11px; }
   .dash-alert.red { background:#fadbd8; border-left-color:#e74c3c; }
   #lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,.9); z-index:999; justify-content:center; align-items:center; }
   #lightbox img { max-width:95%; max-height:95%; border-radius:8px; }
-  #lightbox .lb-close { position:absolute; top:20px; right:30px; color:#fff; font-size:40px; cursor:pointer; }
+  #lightbox .lb-close { position:absolute; top:20px; right:30px; color:#fff; font-size:36px; cursor:pointer; }
   /* Dark Mode */
-  #darkToggle { position:fixed; top:10px; left:10px; z-index:999; background:#333; color:#fff; border:none; border-radius:50%; width:36px; height:36px; font-size:18px; cursor:pointer; }
+  #darkToggle { position:fixed; top:10px; left:10px; z-index:999; background:#333; color:#fff; border:none; border-radius:50%; width:32px; height:32px; font-size:16px; cursor:pointer; }
   body.dark { background:#0d0d0d !important; color:#e0e0e0; }
+  body.dark #topFixed { background:#0d0d0d; border-bottom-color:#333; }
   body.dark h1 { color:#e0e0e0; }
   body.dark table { background:#1a1a1a; }
   body.dark th { background:#111; }
@@ -117,222 +144,155 @@
   body.dark #ctxMenu .ctx-item:hover { background:#333; }
   body.dark #formatBar button { background:#333; color:#e0e0e0; border-color:#444; }
   body.dark #formatBar select { background:#1a1a1a; color:#e0e0e0; border-color:#444; }
-  body.dark #formatBar span { color:#999; }
   body.dark #notifPanel { background:#1a1a1a; border-color:#444; color:#e0e0e0; }
   body.dark .notif-item.overdue { background:#2a1515; }
   body.dark .notif-item.today { background:#2a2515; }
   body.dark .notif-item.upcoming { background:#15202a; }
-  body.dark #dashBtn { background:#1a1a1a; }
-  body.dark .count { color:#999; }
-  body.dark ::placeholder { color:#666; }
-  body.dark td[contenteditable]:focus, body.dark div[contenteditable]:focus { background:#2a2a2a; }
-   /* Calendar */
-  #calBtn { position:fixed; top:12px; right:100px; z-index:999; background:none; border:none; font-size:24px; cursor:pointer; }
-  #calPanel { display:none; position:fixed; top:45px; right:20px; width:340px; background:#fff; border:1px solid #ddd; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,.15); z-index:998; padding:14px; max-height:90vh; overflow-y:auto; }
-  .cal-nav { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
-  .cal-nav button { background:none; border:none; font-size:18px; cursor:pointer; padding:4px 8px; }
-  .cal-nav span { font-weight:700; font-size:14px; }
-  .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; text-align:center; font-size:11px; }
-  .cal-grid .hd { font-weight:700; color:#666; padding:4px; }
-  .cal-day { padding:6px 2px; border-radius:6px; cursor:pointer; position:relative; min-height:32px; display:flex; align-items:center; justify-content:center; }
-  .cal-day:hover { background:#eee; }
-  .cal-day.today { background:#3498db; color:#fff; font-weight:700; }
-  .cal-day.holiday { background:#ffe0e0; color:#c0392b; font-weight:700; }
-  .cal-day.payday { border:2px solid #3498db; }
-  .cal-day.has-event { position:relative; }
-  .cal-day.has-event::after { content:""; position:absolute; bottom:2px; left:50%; transform:translateX(-50%); width:5px; height:5px; background:#e67e22; border-radius:50%; }
-  .cal-legend { display:flex; gap:8px; font-size:10px; margin:8px 0; flex-wrap:wrap; }
-  .cal-legend span { display:flex; align-items:center; gap:3px; }
-  .cal-legend .lg { width:10px; height:10px; border-radius:3px; display:inline-block; }
-  .cal-events { margin-top:10px; border-top:1px solid #eee; padding-top:8px; }
-  .cal-events h5 { margin:0 0 6px; font-size:12px; }
-  .cal-ev-item { padding:4px 8px; margin:3px 0; border-radius:4px; font-size:11px; background:#f8f8f8; display:flex; justify-content:space-between; align-items:center; }
-  .cal-ev-item.hol { background:#ffe0e0; }
-  .cal-ev-item.pay { background:#e0f0ff; }
-  .cal-ev-item.usr { background:#fff8e0; }
-  .cal-ev-del { color:#e74c3c; cursor:pointer; font-size:10px; }
-  .cal-add { margin-top:8px; display:flex; gap:4px; }
-  .cal-add input { flex:1; padding:5px; border:1px solid #ccc; border-radius:6px; font-size:11px; }
-  body.dark #calPanel { background:#1a1a1a; border-color:#444; color:#e0e0e0; }
+  body.dark #calInline { background:#1a1a1a; border-color:#333; color:#e0e0e0; }
   body.dark .cal-day:hover { background:#333; }
-  body.dark .cal-day.today { background:#2471a3; }
-  body.dark .cal-day.holiday { background:#4a1a1a; color:#ff6b6b; }
+  body.dark .cal-day.holiday { background:#3a1a1a; color:#ff6b6b; }
   body.dark .cal-ev-item { background:#222; }
   body.dark .cal-ev-item.hol { background:#3a1a1a; }
   body.dark .cal-ev-item.pay { background:#1a2a3a; }
   body.dark .cal-ev-item.usr { background:#3a3a1a; }
   body.dark .cal-add input { background:#222; color:#e0e0e0; border-color:#444; }
+  body.dark #dashBtn { background:#1a1a1a; }
+  body.dark .count { color:#999; }
+  body.dark ::placeholder { color:#666; }
 </style>
 </head>
 <body>
 <button id="darkToggle" onclick="toggleDark()">🌙</button>
- <button id="calBtn" onclick="toggleCal()" title="Calendar">📅</button>
-<div id="calPanel">
-  <div class="cal-nav">
-    <button onclick="calNav(-1)">◀</button>
-    <span id="calTitle"></span>
-    <button onclick="calNav(1)">▶</button>
+<button id="notifBell" onclick="toggleNotif()">🔔<span id="notifBadge">0</span></button>
+<div id="notifPanel"><h4 style="margin:0 0 8px;font-size:13px;">🔔 Notifications</h4><div id="notifList"></div></div>
+
+<div id="topFixed">
+  <div id="topLeft">
+    <h1>📋 Work Tracker</h1>
+    <div class="toolbar">
+      <button class="btn-add" onclick="addRow()">➕ Add Task</button>
+      <a href="projects.html" class="nav-btn">🚀 Projects</a>
+      <button class="btn-export" onclick="exportCSV()">⬇️ CSV</button>
+      <button class="btn-export" style="background:#c0392b" onclick="exportPDF()">📄 PDF</button>
+      <button onclick="exportBackup()" style="background:#34495e;color:#fff;">💾 Backup</button>
+      <button onclick="document.getElementById('importFile').click()" style="background:#8e44ad;color:#fff;">📂 Restore</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importBackup(this)">
+      <input type="text" id="search" placeholder="🔍 Search..." onkeyup="renderAll()">
+      <select id="filterStatus" onchange="renderAll()"><option value="">— All —</option><option value="To Do">To Do</option><option value="In Progress">In Progress</option><option value="Done">Done</option><option value="Blocked">Blocked</option></select>
+      <span class="count" id="count"></span>
+    </div>
+    <div id="formatBar">
+      <span>Format:</span>
+      <button onclick="fmt('bold')" style="font-weight:bold">B</button>
+      <button onclick="fmt('italic')" style="font-style:italic">I</button>
+      <button onclick="fmt('underline')" style="text-decoration:underline">U</button>
+      <button onclick="fmt('strikeThrough')" style="text-decoration:line-through">S</button>
+      <select onchange="fmtColor(this.value);this.selectedIndex=0"><option value="">🎨</option><option value="red">Red</option><option value="blue">Blue</option><option value="green">Green</option><option value="orange">Orange</option><option value="black">Black</option></select>
+      <select onchange="fmtBg(this.value);this.selectedIndex=0"><option value="">🖍️</option><option value="yellow">Yellow</option><option value="#aaf">Blue</option><option value="#afa">Green</option><option value="transparent">None</option></select>
+      <button onclick="fmt('removeFormat')">🧹</button>
+    </div>
+    <p style="font-size:10px;color:#888;margin:0;">💡 Right-click row to delete | "Done" tasks hidden below</p>
   </div>
-  <div class="cal-legend">
-    <span><div class="lg" style="background:#ffe0e0"></div>Holiday</span>
-    <span><div class="lg" style="border:2px solid #3498db"></div>Pay Day</span>
-    <span><div class="lg" style="background:#3498db"></div>Today</span>
-    <span><div class="lg" style="background:#e67e22;width:6px;height:6px;border-radius:50%"></div>Event</span>
+  <div id="calInline">
+    <div class="cal-nav"><button onclick="calNav(-1)">◀</button><span id="calTitle"></span><button onclick="calNav(1)">▶</button></div>
+    <div class="cal-legend"><span><div class="lg" style="background:#ffe0e0"></div>Holiday</span><span><div class="lg" style="border:2px solid #3498db"></div>Pay</span><span><div class="lg" style="background:#e67e22;width:5px;height:5px;border-radius:50%"></div>Event</span></div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div class="cal-events" id="calEvents"></div>
   </div>
-  <div class="cal-grid" id="calGrid"></div>
-  <div class="cal-events" id="calEvents"></div>
 </div>
-<button id="notifBell" onclick="toggleNotif()">🔔<span id="notifBadge" style="display:none">0</span></button>
-<div id="notifPanel"><h4>🔔 Notifications</h4><div id="notifList"></div></div>
-<h1>📋 Work Tracker</h1>
-<div class="toolbar">
-  <button class="btn-add" onclick="addRow()">➕ Add Task</button>
-  <a href="projects.html" class="nav-btn">🚀 Projects</a>
-  <button class="btn-export" onclick="exportCSV()">⬇️ CSV</button>
-  <button class="btn-export" style="background:#c0392b" onclick="exportPDF()">📄 PDF</button>
-  <input type="text" id="search" placeholder="🔍 Search..." onkeyup="renderAll()">
-  <select id="filterStatus" onchange="renderAll()"><option value="">— All Status —</option><option value="To Do">To Do</option><option value="In Progress">In Progress</option><option value="Done">Done</option><option value="Blocked">Blocked</option></select>
-  <span class="count" id="count"></span>
-</div>
-<div id="formatBar">
-  <span>Format:</span>
-  <button onclick="fmt('bold')" style="font-weight:bold" title="Bold">B</button>
-  <button onclick="fmt('italic')" style="font-style:italic" title="Italic">I</button>
-  <button onclick="fmt('underline')" style="text-decoration:underline" title="Underline">U</button>
-  <button onclick="fmt('strikeThrough')" style="text-decoration:line-through" title="Strikethrough">S</button>
-  <select onchange="fmtColor(this.value);this.selectedIndex=0"><option value="">🎨 Color</option><option value="red">Red</option><option value="blue">Blue</option><option value="green">Green</option><option value="orange">Orange</option><option value="black">Black</option></select>
-  <select onchange="fmtBg(this.value);this.selectedIndex=0"><option value="">🖍️ Highlight</option><option value="yellow">Yellow</option><option value="#aaf">Blue</option><option value="#afa">Green</option><option value="transparent">None</option></select>
-  <button onclick="fmt('removeFormat')">🧹 Clear</button>
-</div>
-<p style="font-size:12px;color:#888;margin:-5px 0 10px;">💡 Right-click row to delete | Tasks with "Done" are hidden below</p>
+
+<div id="scrollArea">
 <table><thead><tr>
-  <th>#</th><th>Task</th><th style="min-width:200px">Problem</th><th style="min-width:180px">Action</th><th>Who</th><th>Start</th><th>End</th><th style="min-width:200px">Notes / Timeline</th><th style="width:100px">Status</th>
+  <th>#</th><th>Task</th><th style="min-width:180px">Problem</th><th style="min-width:160px">Action</th><th>Who</th><th>Start</th><th>End</th><th style="min-width:180px">Notes / Timeline</th><th style="width:95px">Status</th>
 </tr></thead><tbody id="tbody"></tbody></table>
-<div style="margin-top:15px;"><button onclick="toggleDone()" style="background:#1e8449;color:#fff;padding:9px 16px;border:none;border-radius:8px;cursor:pointer;font-weight:600;">📦 Completed (<span id="doneCount">0</span>)</button></div>
-<div id="doneSection" style="display:none;margin-top:10px;"><table><thead><tr><th>#</th><th>Task</th><th>Problem</th><th>Action</th><th>Who</th><th>Start</th><th>End</th><th>Notes</th><th>Restore</th></tr></thead><tbody id="doneTbody"></tbody></table></div>
+<div style="margin-top:12px;"><button onclick="toggleDone()" style="background:#1e8449;color:#fff;padding:8px 14px;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:12px;">📦 Completed (<span id="doneCount">0</span>)</button></div>
+<div id="doneSection" style="display:none;margin-top:8px;"><table><thead><tr><th>#</th><th>Task</th><th>Problem</th><th>Action</th><th>Who</th><th>Start</th><th>End</th><th>Notes</th><th>Restore</th></tr></thead><tbody id="doneTbody"></tbody></table></div>
+</div>
+
 <div id="ctxMenu"><div class="ctx-item ctx-del" onclick="ctxDel()">🗑️ Delete Task</div></div>
 <button id="dashBtn" onclick="toggleDash()">📊</button>
-<div id="dashboard"><h3 style="display:flex;justify-content:space-between;align-items:center;">📊 Dashboard <button onclick="toggleDash()" style="background:none;color:#999;font-size:20px;padding:0 6px;">✕</button></h3><div id="dashContent"></div></div>
+<div id="dashboard"><h3 style="display:flex;justify-content:space-between;align-items:center;font-size:14px;">📊 Dashboard <button onclick="toggleDash()" style="background:none;color:#999;font-size:18px;padding:0;">✕</button></h3><div id="dashContent"></div></div>
 <div id="lightbox" onclick="if(event.target.id==='lightbox')closeLB()"><span class="lb-close" onclick="closeLB()">&times;</span><img id="lb-img" src=""></div>
 <script>
 var data = JSON.parse(localStorage.getItem("workTracker") || "[]");
 var openTL = {};
 var ctxTarget = -1;
 var showDone = false;
+var calDate = new Date();
+var calEvents = JSON.parse(localStorage.getItem("calEvents") || "[]");
+var calSelected = new Date().toISOString().slice(0,10);
+var dismissedNotifs = JSON.parse(sessionStorage.getItem("dismissedNotifs") || "[]");
 
 // Migration
-data.forEach(function(r){
-  if(!r.timeline) r.timeline=[];
-  if(!r.imgs) r.imgs=[];
-  if(r.img){r.imgs.push(r.img);delete r.img;}
-  r.timeline.forEach(function(t){if(!t.status)t.status="wait";if(!t.title)t.title=t.text||"Update";});
-});
+data.forEach(function(r){if(!r.timeline)r.timeline=[];if(!r.imgs)r.imgs=[];if(r.img){r.imgs.push(r.img);delete r.img;}r.timeline.forEach(function(t){if(!t.status)t.status="wait";if(!t.title)t.title=t.text||"Update";});});
 
 function save(){try{localStorage.setItem("workTracker",JSON.stringify(data));}catch(e){alert("⚠️ Storage full!");}}
+function saveCal(){localStorage.setItem("calEvents",JSON.stringify(calEvents));}
+
+// Holidays & Paydays
+var holidays={"2025-04-14":"Songkran","2025-04-15":"Songkran","2025-04-16":"Songkran Substitution","2025-05-01":"Labour Day","2025-05-12":"Wisakha Bucha Substitution","2025-07-10":"Asarnha Bucha Day","2025-07-11":"Buddhist Lent Day","2025-07-28":"King Vajiralongkorn Birthday","2025-08-12":"Mother's Day","2025-10-13":"King Rama IX Memorial","2025-10-23":"Chulalongkorn Memorial","2025-11-07":"Shift Holiday","2025-11-21":"Shift Holiday","2025-12-05":"Father's Day","2025-12-31":"Year End Day","2026-01-01":"New Year Day","2026-01-02":"New Year Holiday","2026-01-03":"New Year (Shift)","2026-02-13":"Makhabucha Substitution","2026-03-03":"Makhabucha Day","2026-04-13":"Songkran","2026-04-14":"Songkran","2026-04-15":"Songkran","2026-05-01":"Labour Day","2026-06-01":"Wisakha Bucha Substitution","2026-06-03":"Queen Suthida Birthday","2026-07-03":"Asarnha Bucha Day","2026-07-28":"King Vajiralongkorn Birthday","2026-07-29":"Buddhist Lent Day","2026-08-12":"Mother's Day","2026-09-11":"Shift Holiday","2026-09-25":"Shift Holiday","2026-10-13":"King Rama IX Memorial","2026-10-23":"Chulalongkorn Memorial","2026-11-06":"Shift Holiday","2026-11-20":"Shift Holiday","2026-12-05":"Father's Day","2026-12-07":"Father's Day Substitution","2026-12-31":"Year End Day","2027-01-01":"New Year Day","2027-01-02":"New Year (Shift)","2027-01-04":"New Year (Office)","2027-01-15":"Shift Holiday","2027-02-22":"Makhabucha Substitution","2027-03-12":"Shift Holiday","2027-03-22":"Makhabucha Day"};
+
+var paydays={"2025-04-11":"Pay Day","2025-04-25":"Pay Day","2025-05-09":"Pay Day","2025-05-23":"Pay Day","2025-06-06":"Pay Day","2025-06-20":"Pay Day","2025-07-04":"Pay Day","2025-07-18":"Pay Day","2025-08-01":"Pay Day","2025-08-15":"Pay Day","2025-08-29":"Pay Day","2025-09-12":"Pay Day","2025-09-26":"Pay Day","2025-10-10":"Pay Day","2025-10-24":"Pay Day","2025-11-07":"Pay Day","2025-11-21":"Pay Day","2025-12-05":"Pay Day","2025-12-19":"Pay Day","2026-01-09":"Pay Day","2026-01-23":"Pay Day","2026-02-06":"Pay Day","2026-02-20":"Pay Day","2026-03-06":"Pay Day","2026-03-20":"Pay Day","2026-04-10":"Pay Day","2026-04-24":"Pay Day","2026-05-08":"Pay Day","2026-05-22":"Pay Day","2026-06-05":"Pay Day","2026-06-19":"Pay Day","2026-07-03":"Pay Day","2026-07-17":"Pay Day","2026-08-07":"Pay Day","2026-08-21":"Pay Day","2026-09-04":"Pay Day","2026-09-18":"Pay Day","2026-10-02":"Pay Day","2026-10-16":"Pay Day","2026-10-30":"Pay Day","2026-11-13":"Pay Day","2026-11-27":"Pay Day","2026-12-11":"Pay Day","2026-12-25":"Pay Day","2027-01-08":"Pay Day","2027-01-22":"Pay Day","2027-02-05":"Pay Day","2027-02-19":"Pay Day","2027-03-05":"Pay Day","2027-03-19":"Pay Day"};
 
 function addRow(){data.push({task:"New Task",detail:"",solution:"",owner:"",status:"To Do",start:"",end:"",note:"",imgs:[],timeline:[]});save();renderAll();}
-
 function edit(i,field,el){if(el.value!==undefined)data[i][field]=el.value;else data[i][field]=el.innerHTML;save();renderDash();}
-
 function fmt(cmd){document.execCommand(cmd,false,null);}
 function fmtColor(c){if(c)document.execCommand("foreColor",false,c);}
 function fmtBg(c){if(c)document.execCommand("hiliteColor",false,c);}
 
 // Context Menu
 document.addEventListener("click",function(){document.getElementById("ctxMenu").style.display="none";});
-document.addEventListener("contextmenu",function(e){
-  var tr=e.target.closest("#tbody tr");
-  if(!tr)return;
-  e.preventDefault();
-  var rows=document.querySelectorAll("#tbody > tr");
-  var idx=-1;rows.forEach(function(r,j){if(r===tr)idx=j;});
-  if(idx===-1)return;
-  // find real data index from displayed row
-  ctxTarget=parseInt(tr.getAttribute("data-idx"));
-  var menu=document.getElementById("ctxMenu");
-  menu.style.display="block";menu.style.left=e.pageX+"px";menu.style.top=e.pageY+"px";
-});
+document.addEventListener("contextmenu",function(e){var tr=e.target.closest("#tbody tr");if(!tr)return;e.preventDefault();ctxTarget=parseInt(tr.getAttribute("data-idx"));var menu=document.getElementById("ctxMenu");menu.style.display="block";menu.style.left=e.pageX+"px";menu.style.top=e.pageY+"px";});
 function ctxDel(){if(ctxTarget>=0&&confirm("Delete this task?")){data.splice(ctxTarget,1);save();renderAll();}document.getElementById("ctxMenu").style.display="none";}
 
 // Images
-function uploadImg(i,input){
-  var files=Array.from(input.files);if(!files.length)return;
-  var loaded=0;
-  files.forEach(function(file){
-    if(file.size>5*1024*1024){loaded++;if(loaded===files.length){save();renderAll();}return;}
-    var reader=new FileReader();
-    reader.onload=function(e){compressImg(e.target.result,800,0.6,function(c){data[i].imgs.push(c);loaded++;if(loaded===files.length){save();renderAll();}});};
-    reader.readAsDataURL(file);
-  });
-}
+function uploadImg(i,input){var files=Array.from(input.files);if(!files.length)return;var loaded=0;files.forEach(function(file){if(file.size>5*1024*1024){loaded++;if(loaded===files.length){save();renderAll();}return;}var reader=new FileReader();reader.onload=function(e){compressImg(e.target.result,800,0.6,function(c){data[i].imgs.push(c);loaded++;if(loaded===files.length){save();renderAll();}});};reader.readAsDataURL(file);});}
 function removeImg(i,j){if(confirm("Remove?")){data[i].imgs.splice(j,1);save();renderAll();}}
 function compressImg(b,maxW,q,cb){var img=new Image();img.onload=function(){var w=img.width,h=img.height;if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}var c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(img,0,0,w,h);cb(c.toDataURL("image/jpeg",q));};img.src=b;}
-function openLB(src){document.getElementById("lb-img").src=src;document.getElementById("lightbox").style.display="flex";}
 function closeLB(){document.getElementById("lightbox").style.display="none";}
+document.addEventListener("click",function(e){if(e.target.tagName==="IMG"&&e.target.closest(".img-area")){document.getElementById("lb-img").src=e.target.src;document.getElementById("lightbox").style.display="flex";e.stopPropagation();}});
 
-function imgHTML(i){
-  var imgs=data[i].imgs||[];
-  var h='<div class="img-area">';
-  imgs.forEach(function(src,j){h+='<div class="iw"><img src="'+src+'" onclick="openLB(\''+src.substring(0,50)+'\')"><button class="ir" onclick="event.stopPropagation();removeImg('+i+','+j+')">&times;<\/button><\/div>';});
-  h+='<\/div><input type="file" accept="image/*" multiple style="font-size:11px;margin-top:4px;" onchange="uploadImg('+i+',this)">';
-  return h;
-}
-
-// Fix openLB to use data index
-function openLB(dummy){
-  // find clicked img src from event
-}
-// Override: use direct src
-document.addEventListener("click",function(e){
-  if(e.target.tagName==="IMG"&&e.target.closest(".img-area")){
-    document.getElementById("lb-img").src=e.target.src;
-    document.getElementById("lightbox").style.display="flex";
-    e.stopPropagation();
-  }
-});
+function imgHTML(i){var imgs=data[i].imgs||[];var h='<div class="img-area">';imgs.forEach(function(src,j){h+='<div class="iw"><img src="'+src+'"><button class="ir" onclick="event.stopPropagation();removeImg('+i+','+j+')">&times;<\/button><\/div>';});h+='<\/div><input type="file" accept="image/*" multiple style="font-size:10px;margin-top:3px;" onchange="uploadImg('+i+',this)">';return h;}
 
 // Timeline
 function tlHTML(i){
-  var tl=data[i].timeline;
-  var isOpen=openTL["w"+i]?"open":"";
+  var tl=data[i].timeline;var isOpen=openTL["w"+i]?"open":"";
   var h='<button class="btn-tl" onclick="toggleTLW('+i+')">📅 Timeline ('+tl.length+')<\/button>';
   h+='<div class="tl-panel '+isOpen+'" id="tlw'+i+'">';
-  h+='<div class="tl-legend"><span><div class="dot" style="background:#bbb"><\/div>Not Started<\/span><span><div class="dot" style="background:#f39c12"><\/div>In Progress<\/span><span><div class="dot" style="background:#27ae60"><\/div>Done<\/span><\/div>';
-  h+='<div class="tl-add"><input type="date" id="tlwD'+i+'" value="'+new Date().toISOString().slice(0,10)+'" style="width:110px;"><input type="text" id="tlwT'+i+'" placeholder="Title..." style="width:90px;"><textarea id="tlwX'+i+'" placeholder="Details..."><\/textarea><button class="btn-add" style="font-size:11px;padding:5px 8px;" onclick="addTLW('+i+')">+<\/button><\/div>';
+  h+='<div class="tl-legend"><span><div class="dot" style="background:#bbb"><\/div>Wait<\/span><span><div class="dot" style="background:#f39c12"><\/div>Doing<\/span><span><div class="dot" style="background:#27ae60"><\/div>Done<\/span><\/div>';
+  h+='<div class="tl-add"><input type="date" id="tlwD'+i+'" value="'+new Date().toISOString().slice(0,10)+'" style="width:100px;"><input type="text" id="tlwT'+i+'" placeholder="Title..." style="width:80px;"><textarea id="tlwX'+i+'" placeholder="Details..."><\/textarea><button class="btn-add" style="font-size:10px;padding:4px 7px;" onclick="addTLW('+i+')">+<\/button><\/div>';
   h+='<div class="timeline">';
-  if(tl.length===0)h+='<p style="color:#999;font-size:11px;">No items yet.<\/p>';
+  if(tl.length===0)h+='<p style="color:#999;font-size:10px;">No items yet.<\/p>';
   else tl.forEach(function(item,j){
     var cls=item.status==="done"?"nd-done":item.status==="prog"?"nd-prog":"nd-wait";
     h+='<div class="tl-item '+cls+'" onclick="cycleTLW('+i+','+j+')">';
-    h+='<div class="tl-date">'+item.date+'<\/div>';
-    h+='<div class="tl-title">'+item.title+'<\/div>';
+    h+='<div class="tl-date">'+item.date+'<\/div><div class="tl-title">'+item.title+'<\/div>';
     if(item.text)h+='<div class="tl-desc">'+item.text+'<\/div>';
+    h+='<button class="tl-edit-btn" onclick="event.stopPropagation();editTLW('+i+','+j+')" title="Edit">✏️<\/button>';
     h+='<button class="tl-del-btn" onclick="event.stopPropagation();delTLW('+i+','+j+')" title="Delete">✕<\/button>';
-   h+='<button class="tl-edit-btn" onclick="event.stopPropagation();editTLW('+i+','+j+')" title="Edit">✏️<\/button>';
     h+='<\/div>';
   });
-  h+='<\/div><\/div>';
-  return h;
+  h+='<\/div><\/div>';return h;
 }
 function toggleTLW(i){if(openTL["w"+i])delete openTL["w"+i];else openTL["w"+i]=true;var el=document.getElementById("tlw"+i);if(el)el.classList.toggle("open");}
 function addTLW(i){var d=document.getElementById("tlwD"+i).value;var t=document.getElementById("tlwT"+i).value.trim();var x=document.getElementById("tlwX"+i).value.trim();if(!t&&!x){alert("Enter title or details.");return;}data[i].timeline.push({date:d,title:t||"Step "+(data[i].timeline.length+1),text:x,status:"wait"});openTL["w"+i]=true;save();renderAll();}
 function delTLW(i,j){if(confirm("Delete?")){data[i].timeline.splice(j,1);openTL["w"+i]=true;save();renderAll();}}
 function cycleTLW(i,j){var item=data[i].timeline[j];if(item.status==="wait")item.status="prog";else if(item.status==="prog")item.status="done";else item.status="wait";openTL["w"+i]=true;save();renderAll();}
+function editTLW(i,j){var item=data[i].timeline[j];var t=prompt("Edit title:",item.title);if(t===null)return;var x=prompt("Edit description:",item.text||"");if(x===null)return;var d=prompt("Edit date (YYYY-MM-DD):",item.date);if(d===null)return;item.title=t||item.title;item.text=x;item.date=d||item.date;openTL["w"+i]=true;save();renderAll();}
 
-// Main Render
+function optH(opts,cur){return opts.map(function(o){return'<option '+(o===cur?"selected":"")+'>'+o+'<\/option>';}).join("");}
+
 function renderAll(){
   var keyword=document.getElementById("search").value.toLowerCase();
   var sF=document.getElementById("filterStatus").value;
-  var tbody=document.getElementById("tbody");
-  tbody.innerHTML="";var count=0;
+  var tbody=document.getElementById("tbody");tbody.innerHTML="";var count=0;
   data.forEach(function(row,i){
     if(row.status==="Done")return;
     var text=(row.task+" "+row.detail+" "+row.solution+" "+row.owner+" "+row.note).toLowerCase();
     if(keyword&&text.indexOf(keyword)===-1)return;
     if(sF&&row.status!==sF)return;
     count++;
-    var tr=document.createElement("tr");
-    tr.setAttribute("data-idx",i);
+    var tr=document.createElement("tr");tr.setAttribute("data-idx",i);
     tr.innerHTML=
       '<td>'+count+'<\/td>'+
       '<td contenteditable onblur="edit('+i+",'task',this)\">"+row.task+'<\/td>'+
@@ -345,22 +305,16 @@ function renderAll(){
       '<td><select onchange="edit('+i+",'status',this);renderAll()\">"+optH(["To Do","In Progress","Done","Blocked"],row.status)+'<\/select><\/td>';
     tbody.appendChild(tr);
   });
-  document.getElementById("count").textContent="Total: "+count+" tasks";
-  renderDone();
-  renderDash();
-  renderNotif();
+  document.getElementById("count").textContent="Total: "+count;
+  renderDone();renderDash();renderNotif();renderCal();
 }
-function optH(opts,cur){return opts.map(function(o){return'<option '+(o===cur?"selected":"")+'>'+o+'<\/option>';}).join("");}
-
-// Completed Tasks
+ // Completed Tasks
 function toggleDone(){showDone=!showDone;document.getElementById("doneSection").style.display=showDone?"block":"none";}
 function renderDone(){
   var tbody=document.getElementById("doneTbody");tbody.innerHTML="";var c=0;
-  data.forEach(function(row,i){
-    if(row.status!=="Done")return;c++;
-    var tr=document.createElement("tr");
-    tr.style.background="#eafaf1";
-    tr.innerHTML='<td>'+c+'<\/td><td>'+row.task+'<\/td><td>'+row.detail+'<\/td><td>'+row.solution+'<\/td><td>'+row.owner+'<\/td><td>'+row.start+'<\/td><td>'+row.end+'<\/td><td>'+row.note+'<\/td><td><button class="btn-add" style="font-size:11px;padding:5px 8px;" onclick="data['+i+'].status=\'In Progress\';save();renderAll();">🔄 Reopen<\/button><\/td>';
+  data.forEach(function(row,i){if(row.status!=="Done")return;c++;
+    var tr=document.createElement("tr");tr.style.background="#eafaf1";
+    tr.innerHTML='<td>'+c+'<\/td><td>'+row.task+'<\/td><td>'+row.detail+'<\/td><td>'+row.solution+'<\/td><td>'+row.owner+'<\/td><td>'+row.start+'<\/td><td>'+row.end+'<\/td><td>'+row.note+'<\/td><td><button class="btn-add" style="font-size:10px;padding:4px 7px;" onclick="data['+i+'].status=\'In Progress\';save();renderAll();">🔄 Reopen<\/button><\/td>';
     tbody.appendChild(tr);
   });
   document.getElementById("doneCount").textContent=c;
@@ -369,18 +323,18 @@ function renderDone(){
 // Dashboard
 function toggleDash(){var db=document.getElementById("dashboard");db.classList.toggle("open");document.getElementById("dashBtn").style.display=db.classList.contains("open")?"none":"block";}
 function renderDash(){
-  var total=data.length;if(total===0){document.getElementById("dashContent").innerHTML='<p style="color:#999;">No tasks.<\/p>';return;}
+  var total=data.length;if(total===0){document.getElementById("dashContent").innerHTML='<p style="color:#999;font-size:11px;">No tasks.<\/p>';return;}
   var sT=0,sP=0,sD=0,sB=0,overdue=0,today=new Date().toISOString().slice(0,10),pc={};
   data.forEach(function(r){if(r.status==="To Do")sT++;else if(r.status==="In Progress")sP++;else if(r.status==="Done")sD++;else if(r.status==="Blocked")sB++;if(r.end&&r.end<today&&r.status!=="Done")overdue++;if(r.owner)pc[r.owner]=(pc[r.owner]||0)+1;});
-  var pct=Math.round((sD/total)*100),circ=2*Math.PI*35,offset=circ-(pct/100)*circ,rc=pct>=75?"#27ae60":pct>=50?"#f39c12":"#e74c3c";
+  var pct=Math.round((sD/total)*100),circ=2*Math.PI*30,offset=circ-(pct/100)*circ,rc=pct>=75?"#27ae60":pct>=50?"#f39c12":"#e74c3c";
   var h='<div class="dash-summary"><div class="dash-stat"><div class="num">'+total+'<\/div><div class="label">Total<\/div><\/div><div class="dash-stat"><div class="num" style="color:#2471a3">'+sP+'<\/div><div class="label">In Progress<\/div><\/div><div class="dash-stat"><div class="num" style="color:#1e8449">'+sD+'<\/div><div class="label">Done<\/div><\/div><div class="dash-stat"><div class="num" style="color:#c0392b">'+sB+'<\/div><div class="label">Blocked<\/div><\/div><\/div>';
-  if(overdue>0)h+='<div class="dash-alert red">⚠️ '+overdue+' task(s) overdue!<\/div>';
-  h+='<div class="dash-card"><h4>✅ Completion<\/h4><div class="progress-ring"><svg width="80" height="80"><circle cx="40" cy="40" r="35" fill="none" stroke="#eee" stroke-width="8"><\/circle><circle cx="40" cy="40" r="35" fill="none" stroke="'+rc+'" stroke-width="8" stroke-dasharray="'+circ+'" stroke-dashoffset="'+offset+'" stroke-linecap="round"><\/circle><\/svg><div class="pct" style="color:'+rc+'">'+pct+'%<\/div><\/div><\/div>';
+  if(overdue>0)h+='<div class="dash-alert red">⚠️ '+overdue+' overdue!<\/div>';
+  h+='<div class="dash-card"><h4>✅ Completion<\/h4><div class="progress-ring"><svg width="70" height="70"><circle cx="35" cy="35" r="30" fill="none" stroke="#eee" stroke-width="7"><\/circle><circle cx="35" cy="35" r="30" fill="none" stroke="'+rc+'" stroke-width="7" stroke-dasharray="'+circ+'" stroke-dashoffset="'+offset+'" stroke-linecap="round"><\/circle><\/svg><div class="pct" style="color:'+rc+'">'+pct+'%<\/div><\/div><\/div>';
   h+='<div class="dash-card"><h4>📈 Status<\/h4>'+dBar("To Do",sT,total,"#95a5a6")+dBar("In Progress",sP,total,"#f39c12")+dBar("Done",sD,total,"#27ae60")+dBar("Blocked",sB,total,"#e74c3c")+'<\/div>';
   var persons=Object.keys(pc);if(persons.length>0){h+='<div class="dash-card"><h4>👥 By Person<\/h4>';persons.sort(function(a,b){return pc[b]-pc[a];});persons.forEach(function(p){h+=dBar(p,pc[p],total,"#8e44ad");});h+='<\/div>';}
   document.getElementById("dashContent").innerHTML=h;
 }
-function dBar(l,v,m,c){var w=m>0?Math.round((v/m)*100):0;return'<div class="dash-row"><span style="min-width:80px;">'+l+'<\/span><div class="dash-bar-bg"><div class="dash-bar" style="width:'+w+'%;background:'+c+'"><\/div><\/div><span class="dash-num">'+v+'<\/span><\/div>';}
+function dBar(l,v,m,c){var w=m>0?Math.round((v/m)*100):0;return'<div class="dash-row"><span style="min-width:70px;">'+l+'<\/span><div class="dash-bar-bg"><div class="dash-bar" style="width:'+w+'%;background:'+c+'"><\/div><\/div><span class="dash-num">'+v+'<\/span><\/div>';}
 
 // Notifications
 function toggleNotif(){var p=document.getElementById("notifPanel");p.style.display=p.style.display==="block"?"none":"block";}
@@ -392,49 +346,38 @@ function renderNotif(){
   var in3=new Date(today);in3.setDate(in3.getDate()+3);var in3Str=in3.toISOString().slice(0,10);
   var notifs=[];
 
-  data.forEach(function(r,i){
+  // Task deadlines
+  data.forEach(function(r){
     if(r.status==="Done")return;
-    var deadline=r.end||"";
-    if(!deadline)return;
-    if(deadline<todayStr){
-      notifs.push({type:"overdue",task:r.task,date:deadline,msg:"⚠️ OVERDUE! Was due "+deadline});
-    } else if(deadline===todayStr){
-      notifs.push({type:"today",task:r.task,date:deadline,msg:"⏰ Due TODAY!"});
-    } else if(deadline===tomorrowStr){
-      notifs.push({type:"upcoming",task:r.task,date:deadline,msg:"📅 Due TOMORROW"});
-    } else if(deadline<=in3Str){
-      notifs.push({type:"upcoming",task:r.task,date:deadline,msg:"📅 Due in "+Math.ceil((new Date(deadline)-today)/(1000*60*60*24))+" days"});
-    }
+    var deadline=r.end||"";if(!deadline)return;
+    if(deadline<todayStr)notifs.push({type:"overdue",task:r.task,date:deadline,msg:"⚠️ OVERDUE! Was due "+deadline});
+    else if(deadline===todayStr)notifs.push({type:"today",task:r.task,date:deadline,msg:"⏰ Due TODAY!"});
+    else if(deadline===tomorrowStr)notifs.push({type:"upcoming",task:r.task,date:deadline,msg:"📅 Due TOMORROW"});
+    else if(deadline<=in3Str)notifs.push({type:"upcoming",task:r.task,date:deadline,msg:"📅 Due in "+Math.ceil((new Date(deadline)-today)/(1000*60*60*24))+" days"});
   });
-      // Calendar Events notifications
+
+  // Calendar events
   calEvents.forEach(function(ev){
-    if(ev.date===todayStr){
-      notifs.push({type:"today",task:"📅 "+ev.title,date:ev.date,msg:"⏰ Scheduled TODAY!"});
-    } else if(ev.date===tomorrowStr){
-      notifs.push({type:"upcoming",task:"📅 "+ev.title,date:ev.date,msg:"📅 Scheduled TOMORROW"});
-    } else if(ev.date>todayStr&&ev.date<=in3Str){
-      notifs.push({type:"upcoming",task:"📅 "+ev.title,date:ev.date,msg:"📅 In "+Math.ceil((new Date(ev.date)-today)/(1000*60*60*24))+" days"});
-    }
+    if(ev.date===todayStr)notifs.push({type:"today",task:"📌 "+ev.title,date:ev.date,msg:"⏰ Scheduled TODAY!"});
+    else if(ev.date===tomorrowStr)notifs.push({type:"upcoming",task:"📌 "+ev.title,date:ev.date,msg:"📅 Scheduled TOMORROW"});
+    else if(ev.date>todayStr&&ev.date<=in3Str)notifs.push({type:"upcoming",task:"📌 "+ev.title,date:ev.date,msg:"📅 In "+Math.ceil((new Date(ev.date)-today)/(1000*60*60*24))+" days"});
   });
 
-  // Holiday notifications (upcoming 3 days)
+  // Holidays
   Object.keys(holidays).forEach(function(d){
-    if(d===tomorrowStr){
-      notifs.push({type:"upcoming",task:"🔴 "+holidays[d],date:d,msg:"🎉 Holiday TOMORROW!"});
-    } else if(d>todayStr&&d<=in3Str){
-      notifs.push({type:"upcoming",task:"🔴 "+holidays[d],date:d,msg:"🎉 Holiday in "+Math.ceil((new Date(d)-today)/(1000*60*60*24))+" days"});
-    }
+    if(d===tomorrowStr)notifs.push({type:"upcoming",task:"🔴 "+holidays[d],date:d,msg:"🎉 Holiday TOMORROW!"});
+    else if(d>todayStr&&d<=in3Str)notifs.push({type:"upcoming",task:"🔴 "+holidays[d],date:d,msg:"🎉 Holiday in "+Math.ceil((new Date(d)-today)/(1000*60*60*24))+" days"});
   });
 
-  // Pay day notifications
+  // Pay days
   Object.keys(paydays).forEach(function(d){
-    if(d===todayStr){
-      notifs.push({type:"today",task:"💰 Pay Day!",date:d,msg:"💰 Salary today!"});
-    } else if(d===tomorrowStr){
-      notifs.push({type:"upcoming",task:"💰 Pay Day tomorrow",date:d,msg:"💰 Salary tomorrow!"});
-    }
+    if(d===todayStr)notifs.push({type:"today",task:"💰 Pay Day!",date:d,msg:"💰 Salary today!"});
+    else if(d===tomorrowStr)notifs.push({type:"upcoming",task:"💰 Pay Day tomorrow",date:d,msg:"💰 Salary tomorrow!"});
   });
-  // Sort: overdue first, then today, then upcoming
+
+  // Filter dismissed
+  notifs=notifs.filter(function(n){return dismissedNotifs.indexOf(n.type+"_"+n.date+"_"+n.task)===-1;});
+
   notifs.sort(function(a,b){var order={overdue:0,today:1,upcoming:2};return order[a.type]-order[b.type];});
 
   var badge=document.getElementById("notifBadge");
@@ -442,184 +385,110 @@ function renderNotif(){
   else{badge.style.display="none";}
 
   var list=document.getElementById("notifList");
-  if(notifs.length===0){list.innerHTML='<p style="color:#999;font-size:12px;">✅ No upcoming deadlines!</p>';return;}
+  if(notifs.length===0){list.innerHTML='<p style="color:#999;font-size:11px;">✅ No upcoming deadlines!<\/p>';return;}
   var h="";
-  notifs.forEach(function(n){
-    h+='<div class="notif-item '+n.type+'">';
+  notifs.forEach(function(n,idx){
+    h+='<div class="notif-item '+n.type+'" onclick="dismissNotif(\''+n.type+'\',\''+n.date+'\',\''+n.task.replace(/'/g,"\\'")+'\')">';
     h+='<div class="ni-title">'+n.task+'<\/div>';
     h+='<div>'+n.msg+'<\/div>';
-    h+='<div class="ni-date">Deadline: '+n.date+'<\/div>';
+    h+='<div class="ni-date">'+n.date+'<\/div>';
     h+='<\/div>';
   });
   list.innerHTML=h;
 }
 
-// Export CSV
+function dismissNotif(type,date,task){
+  dismissedNotifs.push(type+"_"+date+"_"+task);
+  sessionStorage.setItem("dismissedNotifs",JSON.stringify(dismissedNotifs));
+  // Navigate to calendar date
+  calSelected=date;
+  calDate=new Date(date+"T00:00:00");
+  renderCal();
+  renderNotif();
+}
+
+// Calendar
+function calNav(dir){calDate.setMonth(calDate.getMonth()+dir);renderCal();}
+
+function renderCal(){
+  var year=calDate.getFullYear();var month=calDate.getMonth();
+  var months=["January","February","March","April","May","June","July","August","September","October","November","December"];
+  document.getElementById("calTitle").textContent=months[month]+" "+year;
+  var firstDay=new Date(year,month,1).getDay();
+  var daysInMonth=new Date(year,month+1,0).getDate();
+  var todayStr=new Date().toISOString().slice(0,10);
+
+  var h='<div class="hd">Su<\/div><div class="hd">Mo<\/div><div class="hd">Tu<\/div><div class="hd">We<\/div><div class="hd">Th<\/div><div class="hd">Fr<\/div><div class="hd">Sa<\/div>';
+  for(var i=0;i<firstDay;i++)h+='<div><\/div>';
+  for(var d=1;d<=daysInMonth;d++){
+    var dateStr=year+"-"+String(month+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");
+    var cls="cal-day";
+    if(dateStr===todayStr)cls+=" today";
+    if(dateStr===calSelected)cls+=" selected";
+    if(holidays[dateStr])cls+=" holiday";
+    if(paydays[dateStr])cls+=" payday";
+    if(calEvents.some(function(ev){return ev.date===dateStr;}))cls+=" has-event";
+    h+='<div class="'+cls+'" onclick="selectDay(\''+dateStr+'\')">'+d+'<\/div>';
+  }
+  document.getElementById("calGrid").innerHTML=h;
+  showDayEvents(calSelected);
+}
+
+function selectDay(dateStr){calSelected=dateStr;renderCal();}
+
+function showDayEvents(dateStr){
+  var h='<h5>'+dateStr+'<\/h5>';
+  if(holidays[dateStr])h+='<div class="cal-ev-item hol">🔴 '+holidays[dateStr]+'<\/div>';
+  if(paydays[dateStr])h+='<div class="cal-ev-item pay">💰 '+paydays[dateStr]+'<\/div>';
+  calEvents.forEach(function(ev,idx){
+    if(ev.date===dateStr)h+='<div class="cal-ev-item usr"><span>📌 '+ev.title+'<\/span><span class="cal-ev-del" onclick="delCalEv('+idx+')">[x]<\/span><\/div>';
+  });
+  h+='<div class="cal-add"><input type="text" id="calEvInput" placeholder="Add event..." onkeydown="if(event.key===\'Enter\')addCalEv()"><button class="btn-add" style="font-size:10px;padding:4px 7px;" onclick="addCalEv()">+<\/button><\/div>';
+  document.getElementById("calEvents").innerHTML=h;
+}
+
+function addCalEv(){var input=document.getElementById("calEvInput");var title=input.value.trim();if(!title)return;calEvents.push({date:calSelected,title:title});saveCal();renderCal();renderNotif();}
+function delCalEv(idx){calEvents.splice(idx,1);saveCal();renderCal();renderNotif();}
+
+// Export
 function exportCSV(){
   var headers=["#","Task","Problem","Action","Who","Status","Start","End","Notes"];
   var esc=function(v){return'"'+String(v||"").replace(/"/g,'""')+'"';};
   var rows=data.map(function(r,i){return[i+1,r.task,r.detail,r.solution,r.owner,r.status,r.start,r.end,r.note].map(esc).join(",");});
   var csv="\uFEFF"+[headers.map(esc).join(",")].concat(rows).join("\r\n");
-  var blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
-  var link=document.createElement("a");link.href=URL.createObjectURL(blob);link.download="work-tracker-"+new Date().toISOString().slice(0,10)+".csv";link.click();
+  var blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});var link=document.createElement("a");link.href=URL.createObjectURL(blob);link.download="work-tracker-"+new Date().toISOString().slice(0,10)+".csv";link.click();
 }
-
-// Export PDF
 function exportPDF(){
   var win=window.open("","_blank");
-  var html='<html><head><meta charset="UTF-8"><title>Work Tracker<\/title><style>body{font-family:Arial;padding:20px}h1{text-align:center}table{width:100%;border-collapse:collapse;font-size:12px}th,td{border:1px solid #999;padding:6px;text-align:left}th{background:#34495e;color:#fff}img{max-width:150px;max-height:100px;margin:3px}@media print{button{display:none}}<\/style><\/head><body>';
-  html+='<h1>📋 Work Tracker<\/h1><button onclick="window.print()" style="padding:10px 20px;background:#c0392b;color:#fff;border:none;border-radius:8px;cursor:pointer;">🖨️ Print<\/button>';
+  var html='<html><head><meta charset="UTF-8"><title>Work Tracker<\/title><style>body{font-family:Arial;padding:20px}h1{text-align:center}table{width:100%;border-collapse:collapse;font-size:11px}th,td{border:1px solid #999;padding:5px;text-align:left}th{background:#34495e;color:#fff}@media print{button{display:none}}<\/style><\/head><body>';
+  html+='<h1>📋 Work Tracker<\/h1><button onclick="window.print()" style="padding:8px 16px;background:#c0392b;color:#fff;border:none;border-radius:8px;cursor:pointer;">🖨️ Print<\/button>';
   html+='<table><tr><th>#<\/th><th>Task<\/th><th>Problem<\/th><th>Action<\/th><th>Who<\/th><th>Status<\/th><th>Start<\/th><th>End<\/th><th>Notes<\/th><\/tr>';
-  data.forEach(function(r,i){
-    html+='<tr><td>'+(i+1)+'<\/td><td>'+r.task+'<\/td><td>'+r.detail+'<\/td><td>'+r.solution+'<\/td><td>'+r.owner+'<\/td><td>'+r.status+'<\/td><td>'+r.start+'<\/td><td>'+r.end+'<\/td><td>'+r.note+'<\/td><\/tr>';
-  });
-  html+='<\/table><\/body><\/html>';
-  win.document.write(html);win.document.close();
+  data.forEach(function(r,i){html+='<tr><td>'+(i+1)+'<\/td><td>'+r.task+'<\/td><td>'+r.detail+'<\/td><td>'+r.solution+'<\/td><td>'+r.owner+'<\/td><td>'+r.status+'<\/td><td>'+r.start+'<\/td><td>'+r.end+'<\/td><td>'+r.note+'<\/td><\/tr>';});
+  html+='<\/table><\/body><\/html>';win.document.write(html);win.document.close();
+}
+
+// Backup & Restore
+function exportBackup(){
+  var exportData={workTracker:localStorage.getItem("workTracker"),projectTracker:localStorage.getItem("projectTracker"),workTrackerPeople:localStorage.getItem("workTrackerPeople"),calEvents:localStorage.getItem("calEvents")};
+  var blob=new Blob([JSON.stringify(exportData)],{type:"application/json"});var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="backup-"+new Date().toISOString().slice(0,10)+".json";a.click();
+}
+function importBackup(input){
+  var file=input.files[0];if(!file)return;
+  var reader=new FileReader();reader.onload=function(e){
+    try{var d=JSON.parse(e.target.result);
+      if(d.workTracker)localStorage.setItem("workTracker",d.workTracker);
+      if(d.projectTracker)localStorage.setItem("projectTracker",d.projectTracker);
+      if(d.workTrackerPeople)localStorage.setItem("workTrackerPeople",d.workTrackerPeople);
+      if(d.calEvents)localStorage.setItem("calEvents",d.calEvents);
+      alert("✅ Restore successful!");location.reload();
+    }catch(err){alert("⚠️ Invalid file!");}
+  };reader.readAsText(file);input.value="";
 }
 
 // Dark Mode
 function toggleDark(){document.body.classList.toggle("dark");var d=document.body.classList.contains("dark");localStorage.setItem("darkMode",d?"on":"off");document.getElementById("darkToggle").textContent=d?"☀️":"🌙";}
 if(localStorage.getItem("darkMode")==="on"){document.body.classList.add("dark");document.getElementById("darkToggle").textContent="☀️";}
-function editTLW(i,j){
-  var item=data[i].timeline[j];
-  var newTitle=prompt("Edit title:",item.title);
-  if(newTitle===null)return;
-  var newText=prompt("Edit description:",item.text||"");
-  if(newText===null)return;
-  var newDate=prompt("Edit date (YYYY-MM-DD):",item.date);
-  if(newDate===null)return;
-  item.title=newTitle||item.title;
-  item.text=newText;
-  item.date=newDate||item.date;
-  openTL["w"+i]=true;
-  save();
-  renderAll();
-}
- // ===== CALENDAR =====
-var calDate = new Date();
-var calEvents = JSON.parse(localStorage.getItem("calEvents") || "[]");
-var calSelected = "";
 
-// วันหยุด Microchip Thailand FY2026-FY2027
-var holidays = {
-  "2025-04-14":"Songkran Day","2025-04-15":"Songkran Day","2025-04-16":"Songkran Substitution",
-  "2025-05-01":"National Labour Day","2025-05-12":"Wisakha Bucha Substitution",
-  "2025-07-10":"Asarnha Bucha Day","2025-07-11":"Buddhist Lent Day",
-  "2025-07-28":"King Vajiralongkorn Birthday","2025-08-12":"National Mother's Day",
-  "2025-10-13":"King Rama IX Memorial Day","2025-10-23":"Chulalongkorn Memorial Day",
-  "2025-11-07":"Shift Holiday","2025-11-21":"Shift Holiday",
-  "2025-12-05":"National Father's Day","2025-12-31":"Year End Day",
-  "2026-01-01":"New Year Day","2026-01-02":"New Year Holiday","2026-01-03":"New Year (Shift)",
-  "2026-02-13":"Makhabucha Substitution","2026-03-03":"Makhabucha Day",
-  "2026-04-13":"Songkran Day","2026-04-14":"Songkran Day","2026-04-15":"Songkran Day",
-  "2026-05-01":"National Labour Day","2026-06-01":"Wisakha Bucha Substitution",
-  "2026-06-03":"Queen Suthida Birthday","2026-07-03":"Asarnha Bucha Day",
-  "2026-07-28":"King Vajiralongkorn Birthday","2026-07-29":"Buddhist Lent Day",
-  "2026-08-12":"National Mother's Day","2026-09-11":"Shift Holiday",
-  "2026-09-25":"Shift Holiday","2026-10-13":"King Rama IX Memorial Day",
-  "2026-10-23":"Chulalongkorn Memorial Day","2026-11-06":"Shift Holiday",
-  "2026-11-20":"Shift Holiday","2026-12-05":"National Father's Day",
-  "2026-12-07":"Father's Day Substitution","2026-12-31":"Year End Day",
-  "2027-01-01":"New Year Day","2027-01-02":"New Year (Shift)",
-  "2027-01-04":"New Year (Office)","2027-02-22":"Makhabucha Substitution",
-  "2027-03-22":"Makhabucha Day"
-};
-
-// วันเงินออก (Pay Days) FY2026-FY2027
-var paydays = {
-  "2025-04-11":"Pay Day","2025-04-25":"Pay Day","2025-05-09":"Pay Day","2025-05-23":"Pay Day",
-  "2025-06-06":"Pay Day","2025-06-20":"Pay Day","2025-07-04":"Pay Day","2025-07-18":"Pay Day",
-  "2025-08-01":"Pay Day","2025-08-15":"Pay Day","2025-08-29":"Pay Day",
-  "2025-09-12":"Pay Day","2025-09-26":"Pay Day","2025-10-10":"Pay Day","2025-10-24":"Pay Day",
-  "2025-11-07":"Pay Day","2025-11-21":"Pay Day","2025-12-05":"Pay Day","2025-12-19":"Pay Day",
-  "2026-01-09":"Pay Day","2026-01-23":"Pay Day","2026-02-06":"Pay Day","2026-02-20":"Pay Day",
-  "2026-03-06":"Pay Day","2026-03-20":"Pay Day","2026-04-10":"Pay Day","2026-04-24":"Pay Day",
-  "2026-05-08":"Pay Day","2026-05-22":"Pay Day","2026-06-05":"Pay Day","2026-06-19":"Pay Day",
-  "2026-07-03":"Pay Day","2026-07-17":"Pay Day","2026-08-07":"Pay Day","2026-08-21":"Pay Day",
-  "2026-09-04":"Pay Day","2026-09-18":"Pay Day","2026-10-02":"Pay Day","2026-10-16":"Pay Day",
-  "2026-10-30":"Pay Day","2026-11-13":"Pay Day","2026-11-27":"Pay Day",
-  "2026-12-11":"Pay Day","2026-12-25":"Pay Day",
-  "2027-01-08":"Pay Day","2027-01-22":"Pay Day","2027-02-05":"Pay Day","2027-02-19":"Pay Day",
-  "2027-03-05":"Pay Day","2027-03-19":"Pay Day"
-};
-
-function saveCal(){localStorage.setItem("calEvents",JSON.stringify(calEvents));}
-
-function toggleCal(){var p=document.getElementById("calPanel");p.style.display=p.style.display==="block"?"none":"block";if(p.style.display==="block")renderCal();}
-document.addEventListener("click",function(e){if(!e.target.closest("#calBtn")&&!e.target.closest("#calPanel"))document.getElementById("calPanel").style.display="none";});
-
-function calNav(dir){calDate.setMonth(calDate.getMonth()+dir);renderCal();}
-
-function renderCal(){
-  var year=calDate.getFullYear();
-  var month=calDate.getMonth();
-  var months=["January","February","March","April","May","June","July","August","September","October","November","December"];
-  document.getElementById("calTitle").textContent=months[month]+" "+year;
-
-  var firstDay=new Date(year,month,1).getDay();
-  var daysInMonth=new Date(year,month+1,0).getDate();
-  var todayStr=new Date().toISOString().slice(0,10);
-
-  var h='<div class="hd">Su</div><div class="hd">Mo</div><div class="hd">Tu</div><div class="hd">We</div><div class="hd">Th</div><div class="hd">Fr</div><div class="hd">Sa</div>';
-
-  for(var i=0;i<firstDay;i++)h+='<div></div>';
-
-  for(var d=1;d<=daysInMonth;d++){
-    var dateStr=year+"-"+String(month+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");
-    var cls="cal-day";
-    if(dateStr===todayStr)cls+=" today";
-    if(holidays[dateStr])cls+=" holiday";
-    if(paydays[dateStr])cls+=" payday";
-    var hasEv=calEvents.some(function(ev){return ev.date===dateStr;});
-    if(hasEv)cls+=" has-event";
-    if(dateStr===calSelected)cls+=" today";
-    h+='<div class="'+cls+'" onclick="selectDay(\''+dateStr+'\')">'+d+'</div>';
-  }
-  document.getElementById("calGrid").innerHTML=h;
-  showDayEvents(calSelected||todayStr);
-}
-
-function selectDay(dateStr){
-  calSelected=dateStr;
-  renderCal();
-}
-
-function showDayEvents(dateStr){
-  var h='<h5>📅 '+dateStr+'</h5>';
-
-  // Holiday
-  if(holidays[dateStr])h+='<div class="cal-ev-item hol">🔴 '+holidays[dateStr]+'</div>';
-  // Pay Day
-  if(paydays[dateStr])h+='<div class="cal-ev-item pay">💰 '+paydays[dateStr]+'</div>';
-  // User events
-  calEvents.forEach(function(ev,idx){
-    if(ev.date===dateStr){
-      h+='<div class="cal-ev-item usr"><span>📌 '+ev.title+'</span><span class="cal-ev-del" onclick="delCalEv('+idx+')">[x]</span></div>';
-    }
-  });
-
-  // Add event form
-  h+='<div class="cal-add"><input type="text" id="calEvInput" placeholder="Add event..." onkeydown="if(event.key===\'Enter\')addCalEv()"><button class="btn-add" style="font-size:11px;padding:5px 8px;" onclick="addCalEv()">+</button></div>';
-  document.getElementById("calEvents").innerHTML=h;
-}
-
-function addCalEv(){
-  var input=document.getElementById("calEvInput");
-  var title=input.value.trim();
-  if(!title)return;
-  var dateStr=calSelected||new Date().toISOString().slice(0,10);
-  calEvents.push({date:dateStr,title:title});
-  saveCal();
-  renderCal();
-  renderNotif();
-}
-
-function delCalEv(idx){
-  calEvents.splice(idx,1);
-  saveCal();
-  renderCal();
-  renderNotif();
-}
 renderAll();
 </script>
 </body>
