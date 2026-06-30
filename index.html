@@ -75,7 +75,7 @@
   .notif-item .ni-title { font-weight:700; }
   .notif-item .ni-date { color:#888; font-size:10px; }
   /* Calendar Inline */
-  #calInline { width:280px; min-width:280px; background:#fff; border:1px solid #ddd; border-radius:10px; padding:10px; }
+    #calInline { width:200px; min-width:200px; background:#fff; border:1px solid #ddd; border-radius:10px; padding:8px; margin-right:40px; }
   .cal-nav { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
   .cal-nav button { background:none; border:none; font-size:16px; cursor:pointer; padding:2px 6px; }
   .cal-nav span { font-weight:700; font-size:12px; }
@@ -98,8 +98,10 @@
   .cal-ev-item.pay { background:#e0f0ff; }
   .cal-ev-item.usr { background:#fff8e0; }
   .cal-ev-del { color:#e74c3c; cursor:pointer; font-size:9px; }
-  .cal-add { margin-top:6px; display:flex; gap:3px; }
-  .cal-add input { flex:1; padding:4px; border:1px solid #ccc; border-radius:6px; font-size:10px; }
+  .cal-add { margin-top:4px; display:flex; gap:3px; }
+  .cal-add input { flex:1; padding:3px; border:1px solid #ccc; border-radius:6px; font-size:9px; }
+  .cal-events h5 { margin:0 0 3px; font-size:10px; }
+  .cal-ev-item { font-size:9px; padding:2px 5px; }
   /* Dashboard */
   #dashBtn { position:fixed; right:0; top:50%; transform:translateY(-50%); background:#2c3e50; color:#fff; border:none; padding:8px 5px; border-radius:8px 0 0 8px; cursor:pointer; font-size:12px; z-index:90; writing-mode:vertical-rl; }
   #dashboard { position:fixed; right:-310px; top:0; width:300px; height:100vh; background:#fff; box-shadow:-3px 0 15px rgba(0,0,0,.15); overflow-y:auto; padding:15px 12px; transition:right .3s ease; z-index:89; }
@@ -159,6 +161,13 @@
   body.dark #dashBtn { background:#1a1a1a; }
   body.dark .count { color:#999; }
   body.dark ::placeholder { color:#666; }
+   @keyframes flashHighlight { 0%,100%{background:transparent;} 25%{background:#f1c40f;} 50%{background:transparent;} 75%{background:#f1c40f;} }
+  tr.flash { animation: flashHighlight 1.5s ease 2; }
+   .notif-item.read { opacity:0.4; }
+  .notif-item .ni-check { margin-right:6px; }
+  #notifActions { display:none; margin-bottom:8px; padding:6px; background:#ffeaa7; border-radius:6px; font-size:11px; }
+  #notifActions button { font-size:10px; padding:4px 8px; margin-left:4px; }
+  body.dark #notifActions { background:#3a3a1a; }
 </style>
 </head>
 <body>
@@ -221,7 +230,9 @@ var showDone = false;
 var calDate = new Date();
 var calEvents = JSON.parse(localStorage.getItem("calEvents") || "[]");
 var calSelected = new Date().toISOString().slice(0,10);
-var dismissedNotifs = JSON.parse(sessionStorage.getItem("dismissedNotifs") || "[]");
+var readNotifs = JSON.parse(sessionStorage.getItem("readNotifs") || "[]");
+var deletedNotifs = JSON.parse(localStorage.getItem("deletedNotifs") || "[]");
+var notifDeleteMode = false;
 
 // Migration
 data.forEach(function(r){if(!r.timeline)r.timeline=[];if(!r.imgs)r.imgs=[];if(r.img){r.imgs.push(r.img);delete r.img;}r.timeline.forEach(function(t){if(!t.status)t.status="wait";if(!t.title)t.title=t.text||"Update";});});
@@ -346,6 +357,61 @@ function renderNotif(){
   var in3=new Date(today);in3.setDate(in3.getDate()+3);var in3Str=in3.toISOString().slice(0,10);
   var notifs=[];
 
+  data.forEach(function(r){
+    if(r.status==="Done")return;
+    var deadline=r.end||"";if(!deadline)return;
+    if(deadline<todayStr)notifs.push({type:"overdue",task:r.task,date:deadline,msg:"⚠️ OVERDUE! Was due "+deadline});
+    else if(deadline===todayStr)notifs.push({type:"today",task:r.task,date:deadline,msg:"⏰ Due TODAY!"});
+    else if(deadline===tomorrowStr)notifs.push({type:"upcoming",task:r.task,date:deadline,msg:"📅 Due TOMORROW"});
+    else if(deadline<=in3Str)notifs.push({type:"upcoming",task:r.task,date:deadline,msg:"📅 Due in "+Math.ceil((new Date(deadline)-today)/(1000*60*60*24))+" days"});
+  });
+
+  calEvents.forEach(function(ev){
+    if(ev.date===todayStr)notifs.push({type:"today",task:"📌 "+ev.title,date:ev.date,msg:"⏰ Scheduled TODAY!"});
+    else if(ev.date===tomorrowStr)notifs.push({type:"upcoming",task:"📌 "+ev.title,date:ev.date,msg:"📅 TOMORROW"});
+    else if(ev.date>todayStr&&ev.date<=in3Str)notifs.push({type:"upcoming",task:"📌 "+ev.title,date:ev.date,msg:"📅 In "+Math.ceil((new Date(ev.date)-today)/(1000*60*60*24))+" days"});
+  });
+
+  Object.keys(holidays).forEach(function(d){
+    if(d===tomorrowStr)notifs.push({type:"upcoming",task:"🔴 "+holidays[d],date:d,msg:"🎉 Holiday TOMORROW!"});
+    else if(d>todayStr&&d<=in3Str)notifs.push({type:"upcoming",task:"🔴 "+holidays[d],date:d,msg:"🎉 Holiday in "+Math.ceil((new Date(d)-today)/(1000*60*60*24))+" days"});
+  });
+
+  Object.keys(paydays).forEach(function(d){
+    if(d===todayStr)notifs.push({type:"today",task:"💰 Pay Day!",date:d,msg:"💰 Salary today!"});
+    else if(d===tomorrowStr)notifs.push({type:"upcoming",task:"💰 Pay Day",date:d,msg:"💰 Salary tomorrow!"});
+  });
+
+  // Filter deleted
+  notifs=notifs.filter(function(n){return deletedNotifs.indexOf(n.type+"_"+n.date+"_"+n.task)===-1;});
+
+  notifs.sort(function(a,b){var order={overdue:0,today:1,upcoming:2};return order[a.type]-order[b.type];});
+
+  var badge=document.getElementById("notifBadge");
+  var unread=notifs.filter(function(n){return readNotifs.indexOf(n.type+"_"+n.date+"_"+n.task)===-1;});
+  if(unread.length>0){badge.style.display="flex";badge.textContent=unread.length;}
+  else{badge.style.display="none";}
+
+  var list=document.getElementById("notifList");
+  if(notifs.length===0){list.innerHTML='<p style="color:#999;font-size:11px;">✅ All clear!<\/p>';return;}
+
+  var h='<div id="notifActions"><input type="checkbox" id="notifSelectAll" onchange="toggleSelectAll(this)"> Select All <button class="btn-del" onclick="deleteSelectedNotifs()">🗑️ Delete Selected<\/button><\/div>';
+
+  notifs.forEach(function(n,idx){
+    var isRead=readNotifs.indexOf(n.type+"_"+n.date+"_"+n.task)!==-1;
+    var readClass=isRead?" read":"";
+    var key=n.type+"_"+n.date+"_"+n.task;
+    h+='<div class="notif-item '+n.type+readClass+'" data-key="'+key+'">';
+    h+='<input type="checkbox" class="ni-check" value="'+key+'" style="display:'+(notifDeleteMode?"inline":"none")+'">';
+    h+='<span onclick="dismissNotif(\''+n.type+'\',\''+n.date+'\',\''+n.task.replace(/'/g,"\\'")+'\')">';
+    h+='<div class="ni-title">'+n.task+'<\/div>';
+    h+='<div>'+n.msg+'<\/div>';
+    h+='<div class="ni-date">'+n.date+'<\/div>';
+    h+='<\/span><\/div>';
+  });
+  list.innerHTML=h;
+}
+
   // Task deadlines
   data.forEach(function(r){
     if(r.status==="Done")return;
@@ -398,12 +464,31 @@ function renderNotif(){
 }
 
 function dismissNotif(type,date,task){
-  dismissedNotifs.push(type+"_"+date+"_"+task);
-  sessionStorage.setItem("dismissedNotifs",JSON.stringify(dismissedNotifs));
-  // Navigate to calendar date
-  calSelected=date;
-  calDate=new Date(date+"T00:00:00");
-  renderCal();
+  // Mark as read (faded)
+  if(readNotifs.indexOf(type+"_"+date+"_"+task)===-1){
+    readNotifs.push(type+"_"+date+"_"+task);
+    sessionStorage.setItem("readNotifs",JSON.stringify(readNotifs));
+  }
+
+  // Scroll to task and flash
+  var rows=document.querySelectorAll("#tbody tr");
+  rows.forEach(function(tr){
+    var taskCell=tr.querySelector("td:nth-child(2)");
+    if(taskCell&&task.indexOf(taskCell.textContent.trim())!==-1){
+      tr.scrollIntoView({behavior:"smooth",block:"center"});
+      tr.classList.add("flash");
+      setTimeout(function(){tr.classList.remove("flash");},3000);
+    }
+  });
+
+  // If holiday/event → navigate calendar
+  if(task.indexOf("🔴")!==-1||task.indexOf("📌")!==-1||task.indexOf("💰")!==-1){
+    calSelected=date;
+    calDate=new Date(date+"T00:00:00");
+    renderCal();
+  }
+
+  document.getElementById("notifPanel").style.display="none";
   renderNotif();
 }
 
@@ -443,7 +528,7 @@ function showDayEvents(dateStr){
   calEvents.forEach(function(ev,idx){
     if(ev.date===dateStr)h+='<div class="cal-ev-item usr"><span>📌 '+ev.title+'<\/span><span class="cal-ev-del" onclick="delCalEv('+idx+')">[x]<\/span><\/div>';
   });
-  h+='<div class="cal-add"><input type="text" id="calEvInput" placeholder="Add event..." onkeydown="if(event.key===\'Enter\')addCalEv()"><button class="btn-add" style="font-size:10px;padding:4px 7px;" onclick="addCalEv()">+<\/button><\/div>';
+  h+='<div class="cal-add"><input type="text" id="calEvInput" placeholder="+ Add event" onkeydown="if(event.key===\'Enter\')addCalEv()" style="font-size:9px;"><\/div>';
   document.getElementById("calEvents").innerHTML=h;
 }
 
